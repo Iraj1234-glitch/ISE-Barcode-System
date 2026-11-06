@@ -140,6 +140,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\camera_scanner\CameraScanner.cpp" />
+    <ClCompile Include="src\generation\BarcodeGenerator.cpp" />
+    <ClCompile Include="src\gui\mainWindow.cpp" />
+    <ClCompile Include="src\image_scanner\imageScanner.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\camera_scanner\CameraScanner.h" />
+    <ClInclude Include="include\generation\BarcodeGenerator.h" />
+    <ClInclude Include="include\gui\mainWindow.h" />
+    <ClInclude Include="include\image_scanner\imageScanner.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
