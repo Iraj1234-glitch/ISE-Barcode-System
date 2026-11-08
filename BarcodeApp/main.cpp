@@ -1,8 +1,26 @@
+
 #include <iostream>
+#include "include/generation/BarcodeGenerator.h"
+
 using namespace std;
-// Testing correct Git identity
+
 int main()
 {
-    cout << "ISE Barcode System Started!" << endl;
+    BarcodeGenerator generator;
+
+    string code;
+
+    cout << "Enter a 6-digit number: ";
+    cin >> code;
+    if (generator.generateBarcode(code, "barcode.bmp"))
+    {
+        cout << "Barcode generated successfully!" << endl;
+        cout << "Saved as barcode.bmp" << endl;
+    }
+    else
+    {
+        cout << "Invalid input or barcode generation failed!" << endl;
+    }
+
     return 0;
 }
