@@ -1,4 +1,5 @@
-﻿{
+{
+    "builtin-baseline": "d5b6777d666efc1a7f491babfcdab37794c1ae3e",
     "dependencies": [
         "nu-book-zxing-cpp",
         "opencv4"
