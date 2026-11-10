@@ -119,7 +119,7 @@ string CameraScanner::scanUsingCamera()
                 }
             }
 
-            // Display the live camera feed
+            // show the live camera feed
             cv::imshow("Camera Scanner", frame);
 
             // Stop when a valid barcode is found
