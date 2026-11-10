@@ -41,6 +41,9 @@
     <ClInclude Include="include\image_scanner\imageScanner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\image_scanner\stb_image.h">
+    <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="include\gui\mainWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
