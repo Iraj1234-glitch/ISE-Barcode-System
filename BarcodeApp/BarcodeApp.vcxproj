@@ -150,6 +150,7 @@
     <ClInclude Include="include\generation\BarcodeGenerator.h" />
     <ClInclude Include="include\gui\mainWindow.h" />
     <ClInclude Include="include\image_scanner\imageScanner.h" />
+    <ClInclude Include="include\image_scanner\stb_image.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
