@@ -1,8 +1,9 @@
-#include <iostream>
-using namespace std;
-// Testing correct Git identity
+#include "include/gui/MainWindow.h"
+
 int main()
 {
-    cout << "ISE Barcode System Started!" << endl;
+    MainWindow app;
+    app.run();
+
     return 0;
 }
