@@ -7,7 +7,7 @@ class CameraScanner
 {
 public:
 
-    // Opens the webcam and scans until a valid code is found
+    // Opens the webcam , scans until a valid code is found
     std::string scanUsingCamera();
 
 private:
