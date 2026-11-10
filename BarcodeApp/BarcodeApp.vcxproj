@@ -53,6 +53,9 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+<PropertyGroup>
+<VcpkgEnableManifest>true</VcpkgEnableManifest>
+</PropertyGroup>
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
@@ -111,14 +114,28 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Lib\SFML-2.6.2-install\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Lib\SFML-2.6.2-install\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
+    <PostBuildEvent>
+      <Command>if "$(Configuration)"=="Debug" (
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-graphics-d-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-window-d-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-d-2.dll" "$(TargetDir)"
+) else (
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-graphics-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-window-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-2.dll" "$(TargetDir)"
+)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -129,14 +146,28 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Lib\SFML-2.6.2-install\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Lib\SFML-2.6.2-install\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sfml-graphics.lib;sfml-window.lib;sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
+    <PostBuildEvent>
+      <Command>if "$(Configuration)"=="Debug" (
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-graphics-d-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-window-d-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-d-2.dll" "$(TargetDir)"
+) else (
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-graphics-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-window-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-2.dll" "$(TargetDir)"
+)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
