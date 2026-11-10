@@ -1,5 +1,5 @@
 {
-    "builtin-baseline": "d5b6777d666efc1a7f491babfcdab37794c1ae3e",
+    "builtin-baseline": "5cad485d1ddb649c8fa1022bf0b3908555e6e6ba",
     "dependencies": [
         "nu-book-zxing-cpp",
         "opencv4"
