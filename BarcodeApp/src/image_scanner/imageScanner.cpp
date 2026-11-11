@@ -10,7 +10,7 @@
 using namespace std;
 
 
-//// Barcode Image Upload (Izzah)
+//// Barcode Image Upload
 // Reads a Code 128 barcode from an image file and gives back the 6-digit code.
 // The code is always kept as a string so "000123" never becomes 123.
 
@@ -257,6 +257,9 @@ bool readBarcodeFromImage(string path, string &code, string &error) {
     code = found;
     return true;
 }
+
+
+//For Testing
 //int main() {
 //    string path;
 //    cout << "Enter the path of the barcode image: ";
