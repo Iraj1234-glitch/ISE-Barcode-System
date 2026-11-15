@@ -175,6 +175,7 @@ copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-2.dll" "$(TargetDir)"
     <ClCompile Include="src\generation\BarcodeGenerator.cpp" />
     <ClCompile Include="src\gui\mainWindow.cpp" />
     <ClCompile Include="src\image_scanner\imageScanner.cpp" />
+    <ClCompile Include="src\order\OrderManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\camera_scanner\CameraScanner.h" />
@@ -182,6 +183,8 @@ copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-2.dll" "$(TargetDir)"
     <ClInclude Include="include\gui\mainWindow.h" />
     <ClInclude Include="include\image_scanner\imageScanner.h" />
     <ClInclude Include="include\image_scanner\stb_image.h" />
+    <ClInclude Include="include\order\Order.h" />
+    <ClInclude Include="include\order\OrderManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
