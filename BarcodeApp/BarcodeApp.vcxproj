@@ -42,20 +42,20 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-<PropertyGroup>
-<VcpkgEnableManifest>true</VcpkgEnableManifest>
-</PropertyGroup>
+  <PropertyGroup>
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
@@ -171,6 +171,7 @@ copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-2.dll" "$(TargetDir)"
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\billing\BillGenerator.cpp" />
     <ClCompile Include="src\camera_scanner\CameraScanner.cpp" />
     <ClCompile Include="src\generation\BarcodeGenerator.cpp" />
     <ClCompile Include="src\gui\mainWindow.cpp" />
@@ -178,6 +179,7 @@ copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-2.dll" "$(TargetDir)"
     <ClCompile Include="src\order\OrderManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\billing\BillGenerator.h" />
     <ClInclude Include="include\camera_scanner\CameraScanner.h" />
     <ClInclude Include="include\generation\BarcodeGenerator.h" />
     <ClInclude Include="include\gui\mainWindow.h" />

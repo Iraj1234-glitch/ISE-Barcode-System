@@ -33,6 +33,9 @@
     <ClCompile Include="src\order\OrderManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\billing\BillGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\generation\BarcodeGenerator.h">
@@ -45,7 +48,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\image_scanner\stb_image.h">
-    <Filter>Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\gui\mainWindow.h">
       <Filter>Header Files</Filter>
@@ -54,6 +57,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\order\OrderManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\billing\BillGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
