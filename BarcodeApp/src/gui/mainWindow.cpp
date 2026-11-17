@@ -2056,11 +2056,11 @@ void MainWindow::confirmPayment()
 
     if (!detailsSaved)
     {
-        bool removed = orderManager->removeOrder(orderId);
-        if (removed)
-            setMessage("Could not save all product lines. Payment was not finalized. Please try again.", false);
-        else
-            setMessage("Could not save all product lines, and the incomplete order could not be removed. Please contact the administrator.", false);
+        orderManager->updateOrderStatus(orderId, "on-hold");
+        setMessage(
+            "Could not save all product lines. Order placed on hold.",
+            false
+        );
         return;
     }
 
@@ -2072,11 +2072,12 @@ void MainWindow::confirmPayment()
         Order* savedOrder = orderManager->findOrder(orderId);
         if (savedOrder == nullptr || !productManager.processOrderDeduction(*savedOrder))
         {
-            bool removed = orderManager->removeOrder(orderId);
-            if (removed)
-                setMessage("Stock could not be deducted. Payment was not finalized.", false);
-            else
-                setMessage("Stock deduction failed and order cleanup failed. Contact the administrator.", false);
+            orderManager->updateOrderStatus(orderId, "on-hold");
+
+            setMessage(
+                "Stock could not be deducted. Order placed on hold.",
+                false
+            );
             return;
         }
         stockDeducted = true;
@@ -2092,11 +2093,12 @@ void MainWindow::confirmPayment()
             if (savedOrder != nullptr)
                 productManager.restoreOrderStock(*savedOrder);
         }
-        bool removed = orderManager->removeOrder(orderId);
-        if (removed)
-            setMessage("The order could not be finalized as paid. Please try payment again.", false);
-        else
-            setMessage("The order could not be finalized and cleanup failed. Please contact the administrator.", false);
+        orderManager->updateOrderStatus(orderId, "on-hold");
+
+        setMessage(
+            "The order could not be finalized as paid. Order placed on hold.",
+            false
+        );
         return;
     }
 
