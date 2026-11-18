@@ -1593,6 +1593,7 @@ void MainWindow::loadPreview(const string& path)
     }
 }
 
+
 void MainWindow::generateBarcode()
 {
     if (inputCode.length() != 6)
@@ -1607,13 +1608,17 @@ void MainWindow::generateBarcode()
         return;
     }
 
-    string outputPath = saveImageDialog(window.getSystemHandle());
+    // Automatically create the barcodes folder
+    BOOL folderCreated = CreateDirectoryA("barcodes", NULL);
 
-    if (outputPath.empty())
+    if (!folderCreated && GetLastError() != ERROR_ALREADY_EXISTS)
     {
-        setMessage("Save cancelled.", false);
+        setMessage("Could not create the barcodes folder.", false);
         return;
     }
+
+    // Automatically use the barcode number as the filename
+    string outputPath = "barcodes\\" + inputCode + ".bmp";
 
     BarcodeGenerator generator;
 
@@ -1622,13 +1627,14 @@ void MainWindow::generateBarcode()
         generatedImage = outputPath;
         loadPreview(generatedImage);
 
-        setMessage("Barcode generated and saved successfully.", true);
+        setMessage("Barcode saved automatically as " + outputPath, true);
     }
     else
     {
         setMessage("Barcode generation failed.", false);
     }
 }
+
 
 void MainWindow::scanImage()
 {
