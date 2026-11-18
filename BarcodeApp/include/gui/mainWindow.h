@@ -94,6 +94,7 @@ private:
     std::string payMode;       // "cash", "card" or "wallet"
     std::string payMerchant;
     std::string payTendered;
+    bool walletMenuOpen;       // wallet dropdown is expanded
 
     // Final bill (a copy, so a new order can be started)
     CartItem billItems[MAX_DETAILS_PER_ORDER];
