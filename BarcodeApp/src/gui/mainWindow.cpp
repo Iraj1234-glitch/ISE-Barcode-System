@@ -2172,11 +2172,11 @@ void MainWindow::confirmPayment()
 
     if (!detailsSaved)
     {
-        bool removed = orderManager->removeOrder(orderId);
-        if (removed)
-            setMessage("Could not save all product lines. Payment was not finalized. Please try again.", false);
+        bool cancelled = orderManager->updateOrderStatus(orderId, "cancelled");
+        if (cancelled)
+            setMessage("Could not save all product lines. The order was cancelled; payment was not finalized. Please try again.", false);
         else
-            setMessage("Could not save all product lines, and the incomplete order could not be removed. Please contact the administrator.", false);
+            setMessage("Could not save all product lines, and the incomplete order could not be cancelled. Please contact the administrator.", false);
         return;
     }
 
@@ -2188,11 +2188,11 @@ void MainWindow::confirmPayment()
         Order* savedOrder = orderManager->findOrder(orderId);
         if (savedOrder == nullptr || !productManager.processOrderDeduction(*savedOrder))
         {
-            bool removed = orderManager->removeOrder(orderId);
-            if (removed)
-                setMessage("Stock could not be deducted. Payment was not finalized.", false);
+            bool cancelled = orderManager->updateOrderStatus(orderId, "cancelled");
+            if (cancelled)
+                setMessage("Stock could not be deducted. The order was cancelled; payment was not finalized.", false);
             else
-                setMessage("Stock deduction failed and order cleanup failed. Contact the administrator.", false);
+                setMessage("Stock deduction failed and the order could not be cancelled. Contact the administrator.", false);
             return;
         }
         stockDeducted = true;
@@ -2208,11 +2208,11 @@ void MainWindow::confirmPayment()
             if (savedOrder != nullptr)
                 productManager.restoreOrderStock(*savedOrder);
         }
-        bool removed = orderManager->removeOrder(orderId);
-        if (removed)
-            setMessage("The order could not be finalized as paid. Please try payment again.", false);
+        bool cancelled = orderManager->updateOrderStatus(orderId, "cancelled");
+        if (cancelled)
+            setMessage("The order could not be finalized as paid and was cancelled. Please try payment again.", false);
         else
-            setMessage("The order could not be finalized and cleanup failed. Please contact the administrator.", false);
+            setMessage("The order could not be finalized or cancelled. Please contact the administrator.", false);
         return;
     }
 
