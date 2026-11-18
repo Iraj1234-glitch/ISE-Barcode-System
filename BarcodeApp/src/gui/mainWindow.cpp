@@ -93,6 +93,21 @@ static const UiRect R_PAYFIELD = { 250, 310, 320, 40 };
 static const UiRect R_CONFIRM = { 250, 430, 230, 50 };
 static const UiRect R_BACKORDER = { 500, 430, 180, 50 };
 
+// Wallet dropdown (opens right below R_PAYFIELD)
+static const int WALLET_COUNT = 5;
+static const char* const WALLET_NAMES[WALLET_COUNT] =
+{
+    "JazzCash", "Easypaisa", "SadaPay", "NayaPay", "UPaisa"
+};
+static const float WALLET_ITEM_H = 36;
+
+static UiRect walletItemRect(int index)
+{
+    UiRect r = { R_PAYFIELD.x, R_PAYFIELD.y + R_PAYFIELD.h + index * WALLET_ITEM_H,
+                 R_PAYFIELD.w, WALLET_ITEM_H };
+    return r;
+}
+
 // Bill page
 static const UiRect R_RECEIPT = { 250, 25, 600, 660 };
 static const UiRect R_SAVEBILL = { 890, 110, 260, 50 };
@@ -379,6 +394,7 @@ MainWindow::MainWindow()
     payMode = "cash";
     payMerchant = "";
     payTendered = "";
+    walletMenuOpen = false;
 
     billItemCount = 0;
     billScroll = 0;
@@ -998,6 +1014,38 @@ void MainWindow::drawPayment()
             }
         }
     }
+    else if (payMode == "wallet")
+    {
+        drawText("Wallet to pay through", 250, 280, 15, COL_MUTED);
+
+        // Closed dropdown box
+        sf::RectangleShape box(sf::Vector2f(R_PAYFIELD.w, R_PAYFIELD.h));
+        box.setPosition(R_PAYFIELD.x, R_PAYFIELD.y);
+        box.setFillColor(sf::Color::White);
+        box.setOutlineThickness(walletMenuOpen ? 2.0f : 1.0f);
+        box.setOutlineColor(
+            walletMenuOpen ? sf::Color(30, 150, 105) : sf::Color(170, 180, 195)
+        );
+        window.draw(box);
+
+        if (payMerchant.empty())
+            drawText("Select a wallet", R_PAYFIELD.x + 10,
+                R_PAYFIELD.y + (R_PAYFIELD.h - 24) / 2, 19, COL_MUTED);
+        else
+            drawText(payMerchant, R_PAYFIELD.x + 10,
+                R_PAYFIELD.y + (R_PAYFIELD.h - 24) / 2, 19, COL_TITLE);
+
+        // Down arrow
+        sf::ConvexShape arrow(3);
+        arrow.setPoint(0, sf::Vector2f(R_PAYFIELD.x + R_PAYFIELD.w - 30, R_PAYFIELD.y + 16));
+        arrow.setPoint(1, sf::Vector2f(R_PAYFIELD.x + R_PAYFIELD.w - 14, R_PAYFIELD.y + 16));
+        arrow.setPoint(2, sf::Vector2f(R_PAYFIELD.x + R_PAYFIELD.w - 22, R_PAYFIELD.y + 25));
+        arrow.setFillColor(COL_MUTED);
+        window.draw(arrow);
+
+        drawText("The full amount is charged to the wallet.",
+            250, 365, 15, COL_MUTED);
+    }
     else
     {
         drawText("Provider / merchant name (e.g. Visa, JazzCash)",
@@ -1012,6 +1060,34 @@ void MainWindow::drawPayment()
     drawButton(R_BACKORDER, "Back to Order", COL_GREY);
 
     drawMessage(250, 505, 17);
+
+    // Expanded wallet list (drawn last so it sits on top)
+    if (payMode == "wallet" && walletMenuOpen)
+    {
+        sf::Vector2i mouse = sf::Mouse::getPosition(window);
+
+        for (int i = 0; i < WALLET_COUNT; i++)
+        {
+            UiRect item = walletItemRect(i);
+            bool hovered = hit(item, (float)mouse.x, (float)mouse.y);
+            bool chosen = (payMerchant == WALLET_NAMES[i]);
+
+            sf::RectangleShape row(sf::Vector2f(item.w, item.h));
+            row.setPosition(item.x, item.y);
+            row.setFillColor(
+                hovered ? sf::Color(214, 238, 226)
+                : chosen ? sf::Color(236, 246, 241)
+                : sf::Color::White
+            );
+            row.setOutlineThickness(1.0f);
+            row.setOutlineColor(sf::Color(170, 180, 195));
+            window.draw(row);
+
+            drawText(WALLET_NAMES[i], item.x + 10, item.y + (item.h - 22) / 2,
+                18, COL_TITLE);
+        }
+    }
+
     drawBackButton();
 }
 
@@ -1329,29 +1405,59 @@ void MainWindow::clickPayment(float x, float y)
 {
     activeField = FIELD_NONE;
 
+    // While the wallet list is open, a click either picks a wallet or closes it
+    if (payMode == "wallet" && walletMenuOpen)
+    {
+        for (int i = 0; i < WALLET_COUNT; i++)
+        {
+            if (hit(walletItemRect(i), x, y))
+            {
+                payMerchant = WALLET_NAMES[i];
+                setMessage("", false);
+                break;
+            }
+        }
+
+        walletMenuOpen = false;
+        return;
+    }
+
     if (hit(R_CASH, x, y))
     {
         payMode = "cash";
+        walletMenuOpen = false;
         activeField = FIELD_TENDERED;
         setMessage("", false);
     }
 
     else if (hit(R_CARD, x, y))
     {
+        if (payMode == "wallet")
+            payMerchant = "";
+
         payMode = "card";
+        walletMenuOpen = false;
         activeField = FIELD_MERCHANT;
         setMessage("", false);
     }
 
     else if (hit(R_WALLET, x, y))
     {
+        if (payMode != "wallet")
+            payMerchant = "";
+
         payMode = "wallet";
-        activeField = FIELD_MERCHANT;
+        walletMenuOpen = true;
         setMessage("", false);
     }
 
     else if (hit(R_PAYFIELD, x, y))
-        activeField = (payMode == "cash") ? FIELD_TENDERED : FIELD_MERCHANT;
+    {
+        if (payMode == "wallet")
+            walletMenuOpen = true;
+        else
+            activeField = (payMode == "cash") ? FIELD_TENDERED : FIELD_MERCHANT;
+    }
 
     else if (hit(R_CONFIRM, x, y))
         confirmPayment();
@@ -1968,6 +2074,7 @@ void MainWindow::goToPayment()
     payMode = "cash";
     payMerchant = "";
     payTendered = "";
+    walletMenuOpen = false;
 
     currentPage = PAGE_PAYMENT;
     activeField = FIELD_TENDERED;
@@ -2018,7 +2125,10 @@ void MainWindow::confirmPayment()
 
         if (merchant.empty())
         {
-            setMessage("Enter the card or wallet provider name.", false);
+            if (payMode == "wallet")
+                setMessage("Select the wallet to pay through.", false);
+            else
+                setMessage("Enter the card or wallet provider name.", false);
             return;
         }
     }
@@ -2056,11 +2166,11 @@ void MainWindow::confirmPayment()
 
     if (!detailsSaved)
     {
-        orderManager->updateOrderStatus(orderId, "on-hold");
-        setMessage(
-            "Could not save all product lines. Order placed on hold.",
-            false
-        );
+        bool removed = orderManager->removeOrder(orderId);
+        if (removed)
+            setMessage("Could not save all product lines. Payment was not finalized. Please try again.", false);
+        else
+            setMessage("Could not save all product lines, and the incomplete order could not be removed. Please contact the administrator.", false);
         return;
     }
 
@@ -2072,12 +2182,11 @@ void MainWindow::confirmPayment()
         Order* savedOrder = orderManager->findOrder(orderId);
         if (savedOrder == nullptr || !productManager.processOrderDeduction(*savedOrder))
         {
-            orderManager->updateOrderStatus(orderId, "on-hold");
-
-            setMessage(
-                "Stock could not be deducted. Order placed on hold.",
-                false
-            );
+            bool removed = orderManager->removeOrder(orderId);
+            if (removed)
+                setMessage("Stock could not be deducted. Payment was not finalized.", false);
+            else
+                setMessage("Stock deduction failed and order cleanup failed. Contact the administrator.", false);
             return;
         }
         stockDeducted = true;
@@ -2093,12 +2202,11 @@ void MainWindow::confirmPayment()
             if (savedOrder != nullptr)
                 productManager.restoreOrderStock(*savedOrder);
         }
-        orderManager->updateOrderStatus(orderId, "on-hold");
-
-        setMessage(
-            "The order could not be finalized as paid. Order placed on hold.",
-            false
-        );
+        bool removed = orderManager->removeOrder(orderId);
+        if (removed)
+            setMessage("The order could not be finalized as paid. Please try payment again.", false);
+        else
+            setMessage("The order could not be finalized and cleanup failed. Please contact the administrator.", false);
         return;
     }
 
