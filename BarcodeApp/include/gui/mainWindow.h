@@ -190,7 +190,7 @@ private:
     void refreshProductLookup();
     void addProductToCart();
     void removeSelectedProduct();
-    void updateSelectedQuantity();
+    void changeQuantity(int delta);
     void clearOrderForm();
     void goToPayment();
     void confirmPayment();
