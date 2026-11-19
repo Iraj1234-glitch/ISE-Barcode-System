@@ -72,6 +72,29 @@ static bool isValidBarcode(const string& code)
     return true;
 }
 
+static string getCatalogPreservedDescription(const string& productId, const string& productName)
+{
+    if (productId == "P001" || productName == "Milk 1L") {
+        return "Fresh full-cream milk in a 1 litre pack. Keep refrigerated.";
+    }
+    if (productId == "P002" || productName == "Bread") {
+        return "Sliced white bread, 400 g loaf. Best before 3 days from purchase.";
+    }
+    if (productId == "P003" || productName == "Eggs (12)") {
+        return "Farm eggs, one dozen in a protective tray.";
+    }
+    if (productId == "P004" || productName == "Rice 5kg") {
+        return "Premium long-grain basmati rice in a 5 kg bag.";
+    }
+    if (productId == "P005" || productName == "Cooking Oil 1L") {
+        return "Refined sunflower cooking oil, 1 litre bottle.";
+    }
+    if (productId == "P006" || productName == "Sugar 1kg") {
+        return "Fine white sugar, 1 kg pack.";
+    }
+    return "";
+}
+
 ProductCatalog::ProductCatalog(const string& path)
 {
     count = 0;
@@ -100,8 +123,8 @@ bool ProductCatalog::load()
         if (cleaned.empty())
             continue;
 
-        string fields[6];
-        int fieldCount = splitQuoted(cleaned, fields, 6);
+        string fields[20];
+        int fieldCount = splitQuoted(cleaned, fields, 20);
 
         if (fieldCount < 5)
             continue;
@@ -109,26 +132,69 @@ bool ProductCatalog::load()
         if (!isValidBarcode(fields[1]))
             continue;
 
-        double price = 0.0;
+        if (count >= MAX_CATALOG_PRODUCTS)
+            break;
 
-        try
+        if (fieldCount >= 10)
         {
-            price = stod(fields[4]);
+            // Increment 2: 10 fields
+            // 0: ID, 1: Barcode, 2: Acronym, 3: Name, 4: Unit, 5: Price, 6: Tax, 7: Discount, 8: Stock, 9: BarcodePath
+            double price = 0.0;
+            try { price = stod(fields[5]); } catch (...) { continue; }
+            if (price < 0.0) continue;
+
+            double tax = 0.0;
+            try { tax = stod(fields[6]); } catch (...) { tax = 0.0; }
+
+            double discount = 0.0;
+            try { discount = stod(fields[7]); } catch (...) { discount = 0.0; }
+
+            int stock = 0;
+            try { stock = stoi(fields[8]); if (stock < 0) stock = 0; } catch (...) { stock = 0; }
+
+            items[count].productId = fields[0];
+            items[count].barcode = fields[1];
+            items[count].acronym = fields[2];
+            items[count].name = fields[3];
+            items[count].measurementUnit = fields[4];
+            items[count].price = price;
+            items[count].tax = tax;
+            items[count].discount = discount;
+            items[count].stock = stock;
+            items[count].barcodeImagePath = fields[9];
+            items[count].description = getCatalogPreservedDescription(fields[0], fields[3]);
+            if (fieldCount >= 11 && items[count].description.empty())
+            {
+                items[count].description = fields[10];
+            }
+            count++;
         }
-        catch (...)
+        else
         {
-            continue;
+            // Legacy 5/6 fields
+            // 0: ID, 1: Barcode, 2: Name, 3: Description, 4: Price, 5: [Optional Stock]
+            double price = 0.0;
+            try { price = stod(fields[4]); } catch (...) { continue; }
+            if (price < 0.0) continue;
+
+            int stock = 0;
+            if (fieldCount >= 6) {
+                try { stock = stoi(fields[5]); if (stock < 0) stock = 0; } catch (...) { stock = 0; }
+            }
+
+            items[count].productId = fields[0];
+            items[count].barcode = fields[1];
+            items[count].name = fields[2];
+            items[count].description = fields[3];
+            items[count].price = price;
+            items[count].stock = stock;
+            items[count].acronym = "";
+            items[count].measurementUnit = "";
+            items[count].tax = 0.0;
+            items[count].discount = 0.0;
+            items[count].barcodeImagePath = "";
+            count++;
         }
-
-        if (price < 0.0 || count >= MAX_CATALOG_PRODUCTS)
-            continue;
-
-        items[count].productId = fields[0];
-        items[count].barcode = fields[1];
-        items[count].name = fields[2];
-        items[count].description = fields[3];
-        items[count].price = price;
-        count++;
     }
 
     file.close();

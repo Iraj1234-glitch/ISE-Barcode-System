@@ -12,12 +12,22 @@ BillGenerator::BillGenerator()
 {
     billRecord = "";
     fileName = "Bill.txt";
-    total = 0;
+    subtotal = 0.0;
+    totalTax = 0.0;
+    totalDiscount = 0.0;
+    total = 0.0;
 }
 
-// Add product to bill
+// Add product to bill (standard 4-argument version)
 bool BillGenerator::addProduct(string code, string name,
     double price, int quantity)
+{
+    return addProduct(code, name, price, quantity, 0.0, 0.0);
+}
+
+// Add product to bill with tax and discount
+bool BillGenerator::addProduct(string code, string name,
+    double price, int quantity, double taxPerUnit, double discountPerUnit)
 {
     // Validate product information
     if (code == "" || name == "" || price < 0 || quantity <= 0)
@@ -26,7 +36,10 @@ bool BillGenerator::addProduct(string code, string name,
         return false;
     }
 
-    double subtotal = price * quantity;
+    double itemSubtotal = price * quantity;
+    double itemTax = (taxPerUnit >= 0 ? taxPerUnit : 0.0) * quantity;
+    double itemDiscount = (discountPerUnit >= 0 ? discountPerUnit : 0.0) * quantity;
+    double itemPayable = itemSubtotal + itemTax - itemDiscount;
 
     // Create product record
     stringstream record;
@@ -35,7 +48,10 @@ bool BillGenerator::addProduct(string code, string name,
         << name << ","
         << fixed << setprecision(2) << price << ","
         << quantity << ","
-        << subtotal;
+        << itemSubtotal << ","
+        << itemTax << ","
+        << itemDiscount << ","
+        << itemPayable;
 
     // Separate products using |
     if (billRecord != "")
@@ -45,24 +61,45 @@ bool BillGenerator::addProduct(string code, string name,
 
     billRecord += record.str();
 
-    // Update total
-    total += subtotal;
+    // Update totals
+    subtotal += itemSubtotal;
+    totalTax += itemTax;
+    totalDiscount += itemDiscount;
+    total = subtotal + totalTax - totalDiscount;
 
     return true;
+}
+
+double BillGenerator::getSubtotal() const
+{
+    return subtotal;
+}
+
+double BillGenerator::getTotalTax() const
+{
+    return totalTax;
+}
+
+double BillGenerator::getTotalDiscount() const
+{
+    return totalDiscount;
+}
+
+double BillGenerator::getTotal() const
+{
+    return total;
 }
 
 // Display bill
 void BillGenerator::displayBill()
 {
     cout << "\n========== CUSTOMER BILL ==========\n";
-
     cout << billRecord << endl;
-
     cout << "-----------------------------------\n";
-
-    cout << "Total Amount: Rs. "
-        << fixed << setprecision(2) << total << endl;
-
+    cout << "Subtotal    : Rs. " << fixed << setprecision(2) << subtotal << endl;
+    cout << "Total Tax   : Rs. " << fixed << setprecision(2) << totalTax << endl;
+    cout << "Total Disc. : Rs. " << fixed << setprecision(2) << totalDiscount << endl;
+    cout << "Total Amount: Rs. " << fixed << setprecision(2) << total << endl;
     cout << "===================================\n";
 }
 
@@ -85,6 +122,9 @@ bool BillGenerator::saveBill()
 
     // Store complete bill in ONE LINE
     file << billRecord
+        << "|SUBTOTAL," << fixed << setprecision(2) << subtotal
+        << "|TAX," << fixed << setprecision(2) << totalTax
+        << "|DISCOUNT," << fixed << setprecision(2) << totalDiscount
         << "|TOTAL," << fixed << setprecision(2) << total
         << "#" << endl;
 
@@ -99,5 +139,8 @@ bool BillGenerator::saveBill()
 void BillGenerator::resetBill()
 {
     billRecord = "";
-    total = 0;
+    subtotal = 0.0;
+    totalTax = 0.0;
+    totalDiscount = 0.0;
+    total = 0.0;
 }

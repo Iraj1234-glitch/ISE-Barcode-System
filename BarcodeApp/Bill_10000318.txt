@@ -1,0 +1,18 @@
+ISE BARCODE STORE
+Sales Receipt
+------------------------------------------------------
+Order ID : 10000318
+Date     : 2026-11-18   Time: 23:19:12
+Customer : izzah
+Contact  : -
+------------------------------------------------------
+Item                           Price   Qty       Total
+Milk 1L                       280.00     2      560.00
+Eggs (12)                     360.00     1      360.00
+------------------------------------------------------
+TOTAL    : Rs 920.00
+Payment  : Wallet
+Provider : NayaPay
+Status   : PAID
+------------------------------------------------------
+Thank you for shopping with us!

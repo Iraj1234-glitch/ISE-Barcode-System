@@ -121,6 +121,15 @@ public:
     double getProductPriceById(const std::string& productId) const;
 
     // ==========================================
+    // 5b. Increment 2 Field Retrieval
+    // ==========================================
+    std::string getProductAcronymByBarcode(const std::string& barcode) const;
+    std::string getProductMeasurementUnitByBarcode(const std::string& barcode) const;
+    double getProductTaxByBarcode(const std::string& barcode) const;
+    double getProductDiscountByBarcode(const std::string& barcode) const;
+    std::string getProductBarcodeImagePathByBarcode(const std::string& barcode) const;
+
+    // ==========================================
     // 6. Stock Validation (without deduction)
     // ==========================================
     StockValidationResult validateStockByBarcode(const std::string& barcode, int requestedQuantity) const;

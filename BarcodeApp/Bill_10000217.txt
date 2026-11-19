@@ -1,0 +1,17 @@
+ISE BARCODE STORE
+Sales Receipt
+------------------------------------------------------
+Order ID : 10000217
+Date     : 2026-11-17   Time: 19:59:12
+Customer : Iraj Imran
+Contact  : -
+------------------------------------------------------
+Item                           Price   Qty       Total
+Bread                         120.00     1      120.00
+------------------------------------------------------
+TOTAL    : Rs 120.00
+Payment  : Card
+Provider : JazzCash
+Status   : PAID
+------------------------------------------------------
+Thank you for shopping with us!

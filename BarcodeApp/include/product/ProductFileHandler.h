@@ -13,15 +13,21 @@ public:
     static std::string formatField(const std::string& str);
     static int splitSpaceQuoted(const std::string& line, std::string tokens[], int maxTokens);
 
+    // Known descriptions preserver for Increment 1 products
+    static std::string getPreservedDescription(const std::string& productId, const std::string& productName);
+
+    // Reasonable default tax assignment in PKR (as authorized in Increment 2 specifications)
+    static double getDefaultTaxForProduct(const std::string& productId);
+
     // File loading functions
     // Reads records from filePath into products array.
-    // Populates productCount with number of successfully parsed records.
-    // Returns true on success or if file is empty; returns false if file cannot be opened.
+    // Supports both Increment 2 10-field records and legacy 5/6-field records.
     bool loadProducts(const std::string& filePath, Product products[], int& productCount, int maxCapacity = MAX_PRODUCTS);
 
     // File saving functions
     // Saves products array into filePath with formatting preserving quotation marks and delimiters.
-    // If includeStock is true, includes the stock quantity before '#'.
+    // If includeStock is true, includes stock quantity.
+    // If products have Increment 2 fields, outputs all 10 fields followed by '#'.
     bool saveProducts(const std::string& filePath, const Product products[], int productCount, bool includeStock = true);
 
     // Optional separate inventory file support (ProductID Stock #)

@@ -398,6 +398,9 @@ MainWindow::MainWindow()
 
     billItemCount = 0;
     billScroll = 0;
+    billSubtotal = 0.0;
+    billTax = 0.0;
+    billDiscount = 0.0;
     billTotal = 0.0;
     billReceived = 0.0;
     billChange = 0.0;
@@ -1807,14 +1810,33 @@ void MainWindow::scanCamera()
 // Order operations
 // ======================================================================
 
+double MainWindow::cartSubtotal() const
+{
+    double subtotal = 0.0;
+    for (int i = 0; i < cartCount; i++)
+        subtotal += cart[i].price * cart[i].quantity;
+    return subtotal;
+}
+
+double MainWindow::cartTotalTax() const
+{
+    double totalTax = 0.0;
+    for (int i = 0; i < cartCount; i++)
+        totalTax += cart[i].tax * cart[i].quantity;
+    return totalTax;
+}
+
+double MainWindow::cartTotalDiscount() const
+{
+    double totalDiscount = 0.0;
+    for (int i = 0; i < cartCount; i++)
+        totalDiscount += cart[i].discount * cart[i].quantity;
+    return totalDiscount;
+}
+
 double MainWindow::cartTotal() const
 {
-    double total = 0.0;
-
-    for (int i = 0; i < cartCount; i++)
-        total += cart[i].price * cart[i].quantity;
-
-    return total;
+    return cartSubtotal() + cartTotalTax() - cartTotalDiscount();
 }
 
 int MainWindow::cartUnits() const
@@ -1845,6 +1867,12 @@ void MainWindow::refreshProductLookup()
         foundProduct.name = product->getProductName();
         foundProduct.description = product->getDescription();
         foundProduct.price = product->getPrice();
+        foundProduct.acronym = product->getAcronym();
+        foundProduct.measurementUnit = product->getMeasurementUnit();
+        foundProduct.tax = product->getTax();
+        foundProduct.discount = product->getDiscount();
+        foundProduct.stock = product->getStockQuantity();
+        foundProduct.barcodeImagePath = product->getBarcodeImagePath();
         productFound = true;
     }
 }
@@ -1974,6 +2002,8 @@ void MainWindow::addProductToCart()
         cart[cartCount].name = foundProduct.name;
         cart[cartCount].price = foundProduct.price;
         cart[cartCount].quantity = quantity;
+        cart[cartCount].tax = foundProduct.tax;
+        cart[cartCount].discount = foundProduct.discount;
         selectedRow = cartCount;
         cartCount++;
     }
@@ -2224,6 +2254,9 @@ void MainWindow::confirmPayment()
     billContact = trimText(customerContact);
     billMode = payMode;
     billMerchant = merchant;
+    billSubtotal = cartSubtotal();
+    billTax = cartTotalTax();
+    billDiscount = cartTotalDiscount();
     billTotal = total;
     billReceived = received;
     billChange = change;
@@ -2261,17 +2294,31 @@ string MainWindow::buildBillText() const
         << setw(6) << "Qty"
         << setw(12) << "Total" << "\n";
 
+    double subtotal = 0.0;
+    double totalTax = 0.0;
+    double totalDiscount = 0.0;
+
     for (int i = 0; i < billItemCount; i++)
     {
+        double itemSubtotal = billItems[i].price * billItems[i].quantity;
+        subtotal += itemSubtotal;
+        totalTax += billItems[i].tax * billItems[i].quantity;
+        totalDiscount += billItems[i].discount * billItems[i].quantity;
+
         out << left << setw(26) << fitText(billItems[i].name, 25)
             << right << setw(10) << money(billItems[i].price)
             << setw(6) << billItems[i].quantity
-            << setw(12) << money(billItems[i].price * billItems[i].quantity)
+            << setw(12) << money(itemSubtotal)
             << "\n";
     }
 
+    double totalPayable = subtotal + totalTax - totalDiscount;
+
     out << rule;
-    out << "TOTAL    : Rs " << money(billTotal) << "\n";
+    out << "Subtotal : Rs " << money(subtotal) << "\n";
+    out << "Tax      : Rs " << money(totalTax) << "\n";
+    out << "Discount : Rs " << money(totalDiscount) << "\n";
+    out << "TOTAL    : Rs " << money(totalPayable) << "\n";
     out << "Payment  : " << modeLabel(billMode) << "\n";
 
     if (billMode == "cash")
@@ -2296,15 +2343,18 @@ void MainWindow::saveBillToFile()
     string path = "Bill_" + billOrderId + ".txt";
 
     ofstream file(path.c_str());
-
-    if (!file.is_open())
+    if (file.is_open())
     {
-        setMessage("Could not create " + path + ".", false);
-        return;
+        file << buildBillText();
+        file.close();
     }
 
-    file << buildBillText();
-    file.close();
+    ofstream billFile("Bill.txt", ios::app);
+    if (billFile.is_open())
+    {
+        billFile << buildBillText() << "\n";
+        billFile.close();
+    }
 
-    setMessage("Bill saved as " + path + " in the program folder.", true);
+    setMessage("Bill saved as " + path + " and Bill.txt in the program folder.", true);
 }

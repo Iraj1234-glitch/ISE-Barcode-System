@@ -285,6 +285,49 @@ double ProductManager::getProductPriceById(const std::string& productId) const {
 }
 
 // ==========================================
+// 5b. Increment 2 Field Retrieval
+// ==========================================
+std::string ProductManager::getProductAcronymByBarcode(const std::string& barcode) const {
+    const Product* p = findProductByBarcode(barcode);
+    if (p != nullptr) {
+        return p->getAcronym();
+    }
+    return "";
+}
+
+std::string ProductManager::getProductMeasurementUnitByBarcode(const std::string& barcode) const {
+    const Product* p = findProductByBarcode(barcode);
+    if (p != nullptr) {
+        return p->getMeasurementUnit();
+    }
+    return "";
+}
+
+double ProductManager::getProductTaxByBarcode(const std::string& barcode) const {
+    const Product* p = findProductByBarcode(barcode);
+    if (p != nullptr) {
+        return p->getTax();
+    }
+    return 0.0;
+}
+
+double ProductManager::getProductDiscountByBarcode(const std::string& barcode) const {
+    const Product* p = findProductByBarcode(barcode);
+    if (p != nullptr) {
+        return p->getDiscount();
+    }
+    return 0.0;
+}
+
+std::string ProductManager::getProductBarcodeImagePathByBarcode(const std::string& barcode) const {
+    const Product* p = findProductByBarcode(barcode);
+    if (p != nullptr) {
+        return p->getBarcodeImagePath();
+    }
+    return "";
+}
+
+// ==========================================
 // 6. Stock Validation (without deduction)
 // ==========================================
 StockValidationResult ProductManager::validateStockByBarcode(const std::string& barcode, int requestedQuantity) const {

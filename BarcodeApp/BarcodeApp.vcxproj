@@ -114,13 +114,13 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Lib\SFML-2.6.2-install\include;$(ProjectDir)vcpkg_installed\x64-windows\include\opencv4;$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\include\opencv4;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Lib\SFML-2.6.2-install\include;$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\include;$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\include\opencv4;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Lib\SFML-2.6.2-install\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Lib\SFML-2.6.2-install\lib;$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\debug\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;ZXing.lib;opencv_core4d.lib;opencv_highgui4d.lib;opencv_imgcodecs4d.lib;opencv_imgproc4d.lib;opencv_videoio4d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -130,10 +130,12 @@
 copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-graphics-d-2.dll" "$(TargetDir)"
 copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-window-d-2.dll" "$(TargetDir)"
 copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-d-2.dll" "$(TargetDir)"
+copy /Y "$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\debug\bin\*.dll" "$(TargetDir)"
 ) else (
 copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-graphics-2.dll" "$(TargetDir)"
 copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-window-2.dll" "$(TargetDir)"
 copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-2.dll" "$(TargetDir)"
+copy /Y "$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\bin\*.dll" "$(TargetDir)"
 )</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -146,13 +148,13 @@ copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-2.dll" "$(TargetDir)"
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Lib\SFML-2.6.2-install\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Lib\SFML-2.6.2-install\include;$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\include;$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\include\opencv4;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Lib\SFML-2.6.2-install\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sfml-graphics.lib;sfml-window.lib;sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Lib\SFML-2.6.2-install\lib;$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sfml-graphics.lib;sfml-window.lib;sfml-system.lib;ZXing.lib;opencv_core4.lib;opencv_highgui4.lib;opencv_imgcodecs4.lib;opencv_imgproc4.lib;opencv_videoio4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -162,10 +164,12 @@ copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-2.dll" "$(TargetDir)"
 copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-graphics-d-2.dll" "$(TargetDir)"
 copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-window-d-2.dll" "$(TargetDir)"
 copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-d-2.dll" "$(TargetDir)"
+copy /Y "$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\debug\bin\*.dll" "$(TargetDir)"
 ) else (
 copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-graphics-2.dll" "$(TargetDir)"
 copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-window-2.dll" "$(TargetDir)"
 copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-2.dll" "$(TargetDir)"
+copy /Y "$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\bin\*.dll" "$(TargetDir)"
 )</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

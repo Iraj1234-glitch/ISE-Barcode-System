@@ -1,6 +1,6 @@
-P001 100001 "Milk 1L" "Fresh full-cream milk in a 1 litre pack. Keep refrigerated." 280.00 #
-P002 100002 "Bread" "Sliced white bread, 400 g loaf. Best before 3 days from purchase." 120.00 #
-P003 100003 "Eggs (12)" "Farm eggs, one dozen in a protective tray." 360.00 #
-P004 100004 "Rice 5kg" "Premium long-grain basmati rice in a 5 kg bag." 1450.00 #
-P005 100005 "Cooking Oil 1L" "Refined sunflower cooking oil, 1 litre bottle." 520.00 #
-P006 100006 "Sugar 1kg" "Fine white sugar, 1 kg pack." 170.00 #
+P001 100001 MILK1L "Milk 1L" count 280.00 0.00 0.00 50 "" #
+P002 100002 BREAD "Bread" count 120.00 0.00 0.00 40 "" #
+P003 100003 EGGS12 "Eggs (12)" count 360.00 0.00 0.00 30 "" #
+P004 100004 RICE5KG "Rice 5kg" weight 1450.00 0.00 0.00 25 "" #
+P005 100005 OIL1L "Cooking Oil 1L" count 520.00 20.00 0.00 35 "" #
+P006 100006 SUGAR1K "Sugar 1kg" weight 170.00 10.00 0.00 60 "" #

@@ -26,10 +26,47 @@ std::string ProductFileHandler::cleanLine(const std::string& line) {
 
 // Wraps a string in quotes if it contains spaces or tabs
 std::string ProductFileHandler::formatField(const std::string& str) {
-    if (str.empty() || str.find(' ') != std::string::npos || str.find('\t') != std::string::npos) {
+    if (str.empty()) {
+        return "\"\"";
+    }
+    if (str.find(' ') != std::string::npos || str.find('\t') != std::string::npos) {
         return "\"" + str + "\"";
     }
     return str;
+}
+
+// Preserved descriptions for the Increment 1 product catalog
+std::string ProductFileHandler::getPreservedDescription(const std::string& productId, const std::string& productName) {
+    if (productId == "P001" || productName == "Milk 1L") {
+        return "Fresh full-cream milk in a 1 litre pack. Keep refrigerated.";
+    }
+    if (productId == "P002" || productName == "Bread") {
+        return "Sliced white bread, 400 g loaf. Best before 3 days from purchase.";
+    }
+    if (productId == "P003" || productName == "Eggs (12)") {
+        return "Farm eggs, one dozen in a protective tray.";
+    }
+    if (productId == "P004" || productName == "Rice 5kg") {
+        return "Premium long-grain basmati rice in a 5 kg bag.";
+    }
+    if (productId == "P005" || productName == "Cooking Oil 1L") {
+        return "Refined sunflower cooking oil, 1 litre bottle.";
+    }
+    if (productId == "P006" || productName == "Sugar 1kg") {
+        return "Fine white sugar, 1 kg pack.";
+    }
+    return "";
+}
+
+// Authorized default tax amounts in PKR
+double ProductFileHandler::getDefaultTaxForProduct(const std::string& productId) {
+    if (productId == "P001") return 0.00; // Milk (staple exempt)
+    if (productId == "P002") return 0.00; // Bread (staple exempt)
+    if (productId == "P003") return 0.00; // Eggs (staple exempt)
+    if (productId == "P004") return 0.00; // Rice (staple exempt)
+    if (productId == "P005") return 20.00; // Cooking Oil (standard PKR tax)
+    if (productId == "P006") return 10.00; // Sugar (standard PKR tax)
+    return 0.00;
 }
 
 // Splits space-separated line into tokens, respecting double-quoted strings
@@ -69,7 +106,6 @@ int ProductFileHandler::splitSpaceQuoted(const std::string& line, std::string to
 bool ProductFileHandler::loadProducts(const std::string& filePath, Product products[], int& productCount, int maxCapacity) {
     std::ifstream file(filePath);
     if (!file.is_open()) {
-        // Missing file handled safely
         productCount = 0;
         return false;
     }
@@ -83,41 +119,91 @@ bool ProductFileHandler::loadProducts(const std::string& filePath, Product produ
             continue; // Skip blank lines safely
         }
 
-        std::string tokens[10];
-        int tokenCount = splitSpaceQuoted(cleaned, tokens, 10);
+        std::string tokens[20];
+        int tokenCount = splitSpaceQuoted(cleaned, tokens, 20);
 
-        // Required minimal fields: ProductID, Barcode, Name, Description, Price (5 fields)
+        // Minimal check: requires at least 5 tokens
         if (tokenCount < 5) {
-            // Malformed record detected: skip to prevent corruption
             continue;
         }
 
-        std::string pId = tokens[0];
-        std::string barcode = tokens[1];
-        std::string name = tokens[2];
-        std::string desc = tokens[3];
+        if (tokenCount >= 10) {
+            // ========================================================
+            // Increment 2: 10-Field Product Record
+            // 1. Product ID
+            // 2. Product barcode
+            // 3. Product acronym (maximum 8 characters)
+            // 4. Product name
+            // 5. Product measurement unit (count or weight)
+            // 6. Product unit price
+            // 7. Tax on product (PKR amount)
+            // 8. Discount on one unit
+            // 9. Available quantity
+            // 10. Barcode file name and path
+            // ========================================================
+            std::string pId = tokens[0];
+            std::string barcode = tokens[1];
+            std::string acronym = tokens[2];
+            std::string name = tokens[3];
+            std::string unit = tokens[4];
 
-        double price = 0.0;
-        try {
-            price = std::stod(tokens[4]);
-        } catch (...) {
-            // Malformed price field: skip corrupted record
-            continue;
-        }
+            double price = 0.0;
+            try { price = std::stod(tokens[5]); } catch (...) { continue; }
 
-        int stock = 0;
-        if (tokenCount >= 6) {
-            try {
-                stock = std::stoi(tokens[5]);
-                if (stock < 0) stock = 0;
-            } catch (...) {
-                stock = 0;
+            double tax = 0.0;
+            try { tax = std::stod(tokens[6]); } catch (...) { tax = getDefaultTaxForProduct(pId); }
+
+            double discount = 0.0;
+            try { discount = std::stod(tokens[7]); } catch (...) { discount = 0.0; }
+
+            int stock = 0;
+            try { stock = std::stoi(tokens[8]); if (stock < 0) stock = 0; } catch (...) { stock = 0; }
+
+            std::string barcodeImgPath = tokens[9];
+
+            std::string desc = getPreservedDescription(pId, name);
+            if (tokenCount >= 11 && desc.empty()) {
+                desc = tokens[10];
             }
-        }
 
-        if (productCount < maxCapacity) {
-            products[productCount] = Product(pId, barcode, name, desc, price, stock);
-            productCount++;
+            if (productCount < maxCapacity) {
+                products[productCount] = Product(pId, barcode, acronym, name, unit, price, tax, discount, stock, barcodeImgPath, desc);
+                productCount++;
+            }
+        } else {
+            // ========================================================
+            // Increment 1: Legacy 5 or 6-Field Product Record
+            // 1. Product ID
+            // 2. Barcode
+            // 3. Name
+            // 4. Description
+            // 5. Price
+            // 6. [Optional] Stock
+            // ========================================================
+            std::string pId = tokens[0];
+            std::string barcode = tokens[1];
+            std::string name = tokens[2];
+            std::string desc = tokens[3];
+
+            double price = 0.0;
+            try { price = std::stod(tokens[4]); } catch (...) { continue; }
+
+            int stock = 0;
+            if (tokenCount >= 6) {
+                try {
+                    stock = std::stoi(tokens[5]);
+                    if (stock < 0) stock = 0;
+                } catch (...) {
+                    stock = 0;
+                }
+            }
+
+            double tax = getDefaultTaxForProduct(pId);
+
+            if (productCount < maxCapacity) {
+                products[productCount] = Product(pId, barcode, "", name, "", price, tax, 0.0, stock, "", desc);
+                productCount++;
+            }
         }
     }
 
@@ -134,17 +220,35 @@ bool ProductFileHandler::saveProducts(const std::string& filePath, const Product
     }
 
     for (int i = 0; i < productCount; i++) {
-        file << products[i].getProductId() << " "
-             << products[i].getBarcode() << " "
-             << formatField(products[i].getProductName()) << " "
-             << formatField(products[i].getDescription()) << " "
-             << std::fixed << std::setprecision(2) << products[i].getPrice();
+        // If the product has Increment 2 fields populated, serialize all 10 fields
+        bool hasIncrement2Fields = (!products[i].getAcronym().empty() || !products[i].getMeasurementUnit().empty() || !products[i].getBarcodeImagePath().empty());
 
-        if (includeStock) {
-            file << " " << products[i].getStockQuantity();
+        if (hasIncrement2Fields) {
+            file << products[i].getProductId() << " "
+                 << products[i].getBarcode() << " "
+                 << formatField(products[i].getAcronym()) << " "
+                 << formatField(products[i].getProductName()) << " "
+                 << formatField(products[i].getMeasurementUnit()) << " "
+                 << std::fixed << std::setprecision(2) << products[i].getPrice() << " "
+                 << std::fixed << std::setprecision(2) << products[i].getTax() << " "
+                 << std::fixed << std::setprecision(2) << products[i].getDiscount() << " "
+                 << products[i].getStockQuantity() << " "
+                 << formatField(products[i].getBarcodeImagePath())
+                 << " #\n";
+        } else {
+            // Legacy 5/6 fields format
+            file << products[i].getProductId() << " "
+                 << products[i].getBarcode() << " "
+                 << formatField(products[i].getProductName()) << " "
+                 << formatField(products[i].getDescription()) << " "
+                 << std::fixed << std::setprecision(2) << products[i].getPrice();
+
+            if (includeStock) {
+                file << " " << products[i].getStockQuantity();
+            }
+
+            file << " #\n";
         }
-
-        file << " #\n";
     }
 
     file.close();
@@ -152,21 +256,39 @@ bool ProductFileHandler::saveProducts(const std::string& filePath, const Product
     // Replace original file safely
     std::remove(filePath.c_str());
     if (std::rename(tempPath.c_str(), filePath.c_str()) != 0) {
-        // If rename failed, try direct file stream write as fallback
+        // Fallback direct write
         std::ofstream fallback(filePath);
         if (!fallback.is_open()) {
             return false;
         }
         for (int i = 0; i < productCount; i++) {
-            fallback << products[i].getProductId() << " "
-                     << products[i].getBarcode() << " "
-                     << formatField(products[i].getProductName()) << " "
-                     << formatField(products[i].getDescription()) << " "
-                     << std::fixed << std::setprecision(2) << products[i].getPrice();
-            if (includeStock) {
-                fallback << " " << products[i].getStockQuantity();
+            bool hasIncrement2Fields = (!products[i].getAcronym().empty() || !products[i].getMeasurementUnit().empty() || !products[i].getBarcodeImagePath().empty());
+
+            if (hasIncrement2Fields) {
+                fallback << products[i].getProductId() << " "
+                         << products[i].getBarcode() << " "
+                         << formatField(products[i].getAcronym()) << " "
+                         << formatField(products[i].getProductName()) << " "
+                         << formatField(products[i].getMeasurementUnit()) << " "
+                         << std::fixed << std::setprecision(2) << products[i].getPrice() << " "
+                         << std::fixed << std::setprecision(2) << products[i].getTax() << " "
+                         << std::fixed << std::setprecision(2) << products[i].getDiscount() << " "
+                         << products[i].getStockQuantity() << " "
+                         << formatField(products[i].getBarcodeImagePath())
+                         << " #\n";
+            } else {
+                fallback << products[i].getProductId() << " "
+                         << products[i].getBarcode() << " "
+                         << formatField(products[i].getProductName()) << " "
+                         << formatField(products[i].getDescription()) << " "
+                         << std::fixed << std::setprecision(2) << products[i].getPrice();
+
+                if (includeStock) {
+                    fallback << " " << products[i].getStockQuantity();
+                }
+
+                fallback << " #\n";
             }
-            fallback << " #\n";
         }
         fallback.close();
         std::remove(tempPath.c_str());
@@ -184,27 +306,25 @@ bool ProductFileHandler::loadInventory(const std::string& filePath, Product prod
     std::string line;
     while (std::getline(file, line)) {
         std::string cleaned = cleanLine(line);
-        if (cleaned.empty()) {
+        if (cleaned.empty()) continue;
+
+        std::string tokens[5];
+        int count = splitSpaceQuoted(cleaned, tokens, 5);
+        if (count < 2) continue;
+
+        std::string pId = tokens[0];
+        int stock = 0;
+        try {
+            stock = std::stoi(tokens[1]);
+            if (stock < 0) stock = 0;
+        } catch (...) {
             continue;
         }
 
-        std::string tokens[4];
-        int count = splitSpaceQuoted(cleaned, tokens, 4);
-        if (count >= 2) {
-            std::string identifier = tokens[0];
-            int stock = 0;
-            try {
-                stock = std::stoi(tokens[1]);
-                if (stock < 0) stock = 0;
-            } catch (...) {
-                continue;
-            }
-
-            for (int i = 0; i < productCount; i++) {
-                if (products[i].getProductId() == identifier || products[i].getBarcode() == identifier) {
-                    products[i].setStockQuantity(stock);
-                    break;
-                }
+        for (int i = 0; i < productCount; i++) {
+            if (products[i].getProductId() == pId) {
+                products[i].setStockQuantity(stock);
+                break;
             }
         }
     }

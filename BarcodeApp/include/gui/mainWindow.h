@@ -22,6 +22,8 @@ struct CartItem
     std::string name;
     double price = 0.0;
     int quantity = 0;
+    double tax = 0.0;
+    double discount = 0.0;
 };
 
 enum PageId
@@ -107,6 +109,9 @@ private:
     std::string billContact;
     std::string billMode;
     std::string billMerchant;
+    double billSubtotal;
+    double billTax;
+    double billDiscount;
     double billTotal;
     double billReceived;
     double billChange;
@@ -195,6 +200,9 @@ private:
     void cycleField();
     void setMessage(const std::string& text, bool success);
 
+    double cartSubtotal() const;
+    double cartTotalTax() const;
+    double cartTotalDiscount() const;
     double cartTotal() const;
     int cartUnits() const;
     std::string* activeText();
