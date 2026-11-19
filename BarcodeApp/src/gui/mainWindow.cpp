@@ -65,14 +65,15 @@ static const UiRect R_CAM_CLEAR = { 530, 240, 180, 55 };
 static const UiRect R_NAME = { 250, 110, 320, 40 };
 static const UiRect R_CONTACT = { 600, 110, 280, 40 };
 static const UiRect R_CODE = { 250, 195, 200, 40 };
-static const UiRect R_QTY = { 480, 195, 90, 40 };
+static const UiRect R_QTY_MINUS = { 480, 195, 34, 40 };
+static const UiRect R_QTY = { 518, 195, 70, 40 };
+static const UiRect R_QTY_PLUS = { 592, 195, 34, 40 };
 static const UiRect R_SCAN_IMG = { 250, 250, 140, 40 };
 static const UiRect R_SCAN_CAM = { 400, 250, 140, 40 };
 static const UiRect R_DESC = { 550, 250, 170, 40 };
 static const UiRect R_ADD = { 735, 250, 145, 40 };
 static const UiRect R_PRODUCT = { 250, 305, 630, 105 };
 static const UiRect R_REMOVE = { 250, 645, 180, 40 };
-static const UiRect R_UPDATE = { 445, 645, 160, 40 };
 static const UiRect R_SUMMARY = { 910, 85, 260, 300 };
 static const UiRect R_BILL = { 910, 420, 260, 55 };
 static const UiRect R_CLEAR = { 910, 490, 260, 45 };
@@ -365,8 +366,9 @@ MainWindow::MainWindow()
     orderManager->loadAll();
 
     // Load products and, when supplied, the separate stock file.
-    productManager.loadProducts();
-    inventoryEnabled = productManager.loadInventory();
+    // Stock is stored in Product.txt, so stock checks and deductions are
+    // active whenever the product file loads successfully.
+    inventoryEnabled = productManager.loadProducts();
 
     currentPage = PAGE_DASHBOARD;
     activeField = FIELD_NONE;
@@ -939,7 +941,9 @@ void MainWindow::drawOrderPage()
     drawField(R_CODE, orderCode, activeField == FIELD_CODE);
 
     drawText("Quantity", 480, 170, 15, COL_MUTED);
+    drawButton(R_QTY_MINUS, "-", COL_BLUE);
     drawField(R_QTY, orderQty, activeField == FIELD_QTY);
+    drawButton(R_QTY_PLUS, "+", COL_BLUE);
 
     drawButton(R_SCAN_IMG, "Scan Image", COL_BLUE);
     drawButton(R_SCAN_CAM, "Scan Camera", COL_BLUE);
@@ -951,7 +955,6 @@ void MainWindow::drawOrderPage()
     drawCartTable();
 
     drawButton(R_REMOVE, "Remove Selected", COL_DANGER);
-    drawButton(R_UPDATE, "Update Qty", COL_BLUE);
 
     drawOrderSummary();
     drawButton(R_BILL, "Generate Bill");
@@ -1354,6 +1357,12 @@ void MainWindow::clickOrder(float x, float y)
     else if (hit(R_QTY, x, y))
         activeField = FIELD_QTY;
 
+    else if (hit(R_QTY_MINUS, x, y))
+        changeQuantity(-1);
+
+    else if (hit(R_QTY_PLUS, x, y))
+        changeQuantity(1);
+
     else if (hit(R_SCAN_IMG, x, y))
         scanImageIntoOrder();
 
@@ -1376,9 +1385,6 @@ void MainWindow::clickOrder(float x, float y)
 
     else if (hit(R_REMOVE, x, y))
         removeSelectedProduct();
-
-    else if (hit(R_UPDATE, x, y))
-        updateSelectedQuantity();
 
     else if (hit(R_CLEAR, x, y))
     {
@@ -1928,8 +1934,10 @@ void MainWindow::scanCameraIntoOrder()
 
     if (productFound)
     {
-        activeField = FIELD_QTY;
-        setMessage("Scanned " + code + ". Check the quantity and press Add Product.", true);
+        // Every camera scan adds exactly one unit. Scanning the same
+        // barcode again increases the quantity of that line by 1.
+        orderQty = "1";
+        addProductToCart();
     }
     else
     {
@@ -1953,7 +1961,7 @@ void MainWindow::addProductToCart()
         return;
     }
 
-    // When an Inventory.txt file is present, prevent adding more than available stock.
+    // Prevent adding more than the available stock.
     int existing = -1;
 
     for (int i = 0; i < cartCount; i++)
@@ -2044,34 +2052,83 @@ void MainWindow::removeSelectedProduct()
     setMessage("Removed " + name + " from the order.", true);
 }
 
-void MainWindow::updateSelectedQuantity()
+// Handles the + and - buttons beside the quantity box.
+// If a product is looked up, the quantity to add is changed.
+// Otherwise, if an order line is selected, that line is changed directly.
+// The quantity can never go above the stock that is available.
+void MainWindow::changeQuantity(int delta)
 {
-    if (selectedRow < 0 || selectedRow >= cartCount)
+    bool editCartLine = (!productFound && selectedRow >= 0 && selectedRow < cartCount);
+
+    int current = 0;
+
+    if (editCartLine)
+        current = cart[selectedRow].quantity;
+    else if (!parsePositiveInt(orderQty, current))
+        current = 1;
+
+    int wanted = current + delta;
+
+    if (wanted < 1)
     {
-        setMessage("Click a product in the order first.", false);
+        if (editCartLine)
+            setMessage("Quantity cannot be below 1. Use Remove Selected to delete the line.", false);
+        else
+            setMessage("Quantity cannot be below 1.", false);
+
+        if (!editCartLine)
+            orderQty = "1";
         return;
     }
 
-    int quantity = 0;
-
-    if (!parsePositiveInt(orderQty, quantity) || quantity > 999)
+    if (wanted > 999)
     {
-        setMessage("Enter a quantity between 1 and 999.", false);
+        setMessage("A single line cannot exceed 999 units.", false);
         return;
     }
 
     if (inventoryEnabled)
     {
-        int available = productManager.getStockByBarcode(cart[selectedRow].barcode);
-        if (quantity > available)
+        string barcode;
+        int alreadyInCart = 0;
+
+        if (editCartLine)
         {
-            setMessage("Insufficient stock. Available: " + to_string(available) + ".", false);
-            return;
+            barcode = cart[selectedRow].barcode;
+        }
+        else if (productFound)
+        {
+            barcode = foundProduct.barcode;
+
+            for (int i = 0; i < cartCount; i++)
+            {
+                if (cart[i].barcode == barcode)
+                {
+                    alreadyInCart = cart[i].quantity;
+                    break;
+                }
+            }
+        }
+
+        if (!barcode.empty())
+        {
+            int available = productManager.getStockByBarcode(barcode);
+
+            if (wanted + alreadyInCart > available)
+            {
+                setMessage("Insufficient stock. Available: " + to_string(available) +
+                    (alreadyInCart > 0 ? ", already in order: " + to_string(alreadyInCart) : string("")) +
+                    ".", false);
+                return;
+            }
         }
     }
 
-    cart[selectedRow].quantity = quantity;
-    setMessage("Quantity updated.", true);
+    if (editCartLine)
+        cart[selectedRow].quantity = wanted;
+
+    orderQty = to_string(wanted);
+    setMessage("", false);
 }
 
 // Clears customer details, the product entry and the cart
@@ -2210,7 +2267,7 @@ void MainWindow::confirmPayment()
         return;
     }
 
-    // Deduct stock only when a real Inventory.txt was loaded.
+    // Deduct stock and save it to Product.txt.
     // The ProductManager validates the full order before changing any quantities.
     bool stockDeducted = false;
     if (inventoryEnabled)
