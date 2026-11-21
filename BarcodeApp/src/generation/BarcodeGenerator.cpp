@@ -34,17 +34,17 @@ const char* patterns[107] =
 // Write a 2-byte number
 void writeU16(ofstream& file, unsigned short value)
 {
-    file.put(value & 255);
-    file.put((value >> 8) & 255);
+    file.put(static_cast<char>(value & 255));
+    file.put(static_cast<char>((value >> 8) & 255));
 }
 
 // Write a 4-byte number
 void writeU32(ofstream& file, unsigned int value)
 {
-    file.put(value & 255);
-    file.put((value >> 8) & 255);
-    file.put((value >> 16) & 255);
-    file.put((value >> 24) & 255);
+    file.put(static_cast<char>(value & 255));
+    file.put(static_cast<char>((value >> 8) & 255));
+    file.put(static_cast<char>((value >> 16) & 255));
+    file.put(static_cast<char>((value >> 24) & 255));
 }
 
 bool BarcodeGenerator::generateBarcode(const string& code, const string& outputPath)
@@ -160,7 +160,7 @@ bool BarcodeGenerator::generateBarcode(const string& code, const string& outputP
     writeU32(file, 0);
     writeU32(file, 0);
 
-    file.write(reinterpret_cast<const char*>(pixels), rowSize * height);
+    file.write(reinterpret_cast<const char*>(pixels), static_cast<std::streamsize>(rowSize) * height);
 
     file.close();
 
