@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -30,6 +30,36 @@
     <ClCompile Include="src\gui\mainWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\order\OrderManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\billing\BillGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\product\Product.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\product\ProductFileHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\product\ProductManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\product\Category.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\product\CategoryFileHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\product\CategoryManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\product\ManagerProductService.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui\ManagerProductWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\generation\BarcodeGenerator.h">
@@ -41,7 +71,46 @@
     <ClInclude Include="include\image_scanner\imageScanner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\image_scanner\stb_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="include\gui\mainWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\order\Order.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\order\OrderManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\billing\BillGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\product\Product.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\product\ProductFileHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\product\ProductManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\product\Category.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\product\CategoryFileHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\product\CategoryManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\product\ManagerProductService.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\gui\ManagerProductWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\gui\ProductCatalog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

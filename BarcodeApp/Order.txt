@@ -1,0 +1,8 @@
+10000117 2026-11-17 19:56:08 Iraj "" paid 280.00 cash None #
+10000217 2026-11-17 19:59:12 "Iraj Imran" "" paid 120.00 card JazzCash #
+10000118 2026-11-18 21:13:27 Iraj "" paid 280.00 cash None #
+10000218 2026-11-18 21:33:41 Iraj "" paid 1920.00 wallet SadaPay #
+10000318 2026-11-18 23:19:12 izzah "" paid 920.00 wallet NayaPay #
+10000119 2026-11-19 09:53:21 iraj "" paid 280.00 wallet Easypaisa #
+10000219 2026-11-19 09:58:17 Hiba "" paid 840.00 cash None #
+10000319 2026-11-19 10:13:33 iraj "" paid 280.00 cash None #

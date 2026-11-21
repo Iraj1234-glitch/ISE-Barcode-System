@@ -1,0 +1,6 @@
+P001 100001 MILK1L "Milk 1L" count 280.00 0.00 0.00 20 "barcodes/100001.bmp" #
+P002 100002 BREAD Bread count 120.00 0.00 0.00 40 "barcodes/100002.bmp" #
+P003 100003 EGGS12 "Eggs (12)" count 360.00 0.00 0.00 30 "barcodes/100003.bmp" #
+P004 100004 RICE5KG "Rice 5kg" weight 1450.00 0.00 0.00 25 "barcodes/100004.bmp" #
+P005 100005 OIL1L "Cooking Oil 1L" count 520.00 20.00 0.00 35 "barcodes/100005.bmp" #
+P006 100006 SUGAR1K "Sugar 1kg" weight 170.00 10.00 0.00 60 "barcodes/100006.bmp" #

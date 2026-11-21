@@ -1,0 +1,18 @@
+ISE BARCODE STORE
+Sales Receipt
+------------------------------------------------------
+Order ID : 10000117
+Date     : 2026-11-17   Time: 19:56:08
+Customer : Iraj
+Contact  : -
+------------------------------------------------------
+Item                           Price   Qty       Total
+Milk 1L                       280.00     1      280.00
+------------------------------------------------------
+TOTAL    : Rs 280.00
+Payment  : Cash
+Received : Rs 300.00
+Change   : Rs 20.00
+Status   : PAID
+------------------------------------------------------
+Thank you for shopping with us!
