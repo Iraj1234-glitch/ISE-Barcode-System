@@ -103,6 +103,30 @@ int ProductFileHandler::splitSpaceQuoted(const std::string& line, std::string to
     return count;
 }
 
+static bool looksLikeTwoDigitId(const std::string& value) {
+    return value.length() == 2 &&
+           value[0] >= '0' && value[0] <= '9' &&
+           value[1] >= '0' && value[1] <= '9';
+}
+
+static void writeIncrementProductLine(std::ostream& file, const Product& product) {
+    file << product.getProductId() << " "
+         << product.getBarcode() << " "
+         << ProductFileHandler::formatField(product.getAcronym()) << " "
+         << ProductFileHandler::formatField(product.getProductName()) << " "
+         << ProductFileHandler::formatField(product.getMeasurementUnit()) << " "
+         << std::fixed << std::setprecision(2) << product.getPrice() << " "
+         << std::fixed << std::setprecision(2) << product.getTax() << " "
+         << std::fixed << std::setprecision(2) << product.getDiscount() << " "
+         << product.getStockQuantity() << " "
+         << ProductFileHandler::formatField(product.getBarcodeImagePath()) << " "
+         << ProductFileHandler::formatField(product.getCategoryId());
+    if (!product.getDescription().empty()) {
+        file << " " << ProductFileHandler::formatField(product.getDescription());
+    }
+    file << " #\n";
+}
+
 bool ProductFileHandler::loadProducts(const std::string& filePath, Product products[], int& productCount, int maxCapacity) {
     std::ifstream file(filePath);
     if (!file.is_open()) {
@@ -129,17 +153,11 @@ bool ProductFileHandler::loadProducts(const std::string& filePath, Product produ
 
         if (tokenCount >= 10) {
             // ========================================================
-            // Increment 2: 10-Field Product Record
-            // 1. Product ID
-            // 2. Product barcode
-            // 3. Product acronym (maximum 8 characters)
-            // 4. Product name
-            // 5. Product measurement unit (count or weight)
-            // 6. Product unit price
-            // 7. Tax on product (PKR amount)
-            // 8. Discount on one unit
-            // 9. Available quantity
-            // 10. Barcode file name and path
+            // Increment 2/3 Product Record
+            // 1-10: Increment 2 fields
+            // 11: Category ID (exactly two digits) — appended for Increment 3
+            // 12: Optional description
+            // Existing 10-field Increment 2 files remain valid.
             // ========================================================
             std::string pId = tokens[0];
             std::string barcode = tokens[1];
@@ -161,13 +179,27 @@ bool ProductFileHandler::loadProducts(const std::string& filePath, Product produ
 
             std::string barcodeImgPath = tokens[9];
 
+            std::string catId = "";
+            std::string extraDesc = "";
+            if (tokenCount >= 11) {
+                bool looksLikeCategory = looksLikeTwoDigitId(tokens[10]);
+                if (looksLikeCategory) {
+                    catId = tokens[10];
+                    if (tokenCount >= 12) {
+                        extraDesc = tokens[11];
+                    }
+                } else {
+                    extraDesc = tokens[10];
+                }
+            }
+
             std::string desc = getPreservedDescription(pId, name);
-            if (tokenCount >= 11 && desc.empty()) {
-                desc = tokens[10];
+            if (desc.empty() && !extraDesc.empty()) {
+                desc = extraDesc;
             }
 
             if (productCount < maxCapacity) {
-                products[productCount] = Product(pId, barcode, acronym, name, unit, price, tax, discount, stock, barcodeImgPath, desc);
+                products[productCount] = Product(pId, barcode, acronym, name, unit, price, tax, discount, stock, barcodeImgPath, desc, catId);
                 productCount++;
             }
         } else {
@@ -224,17 +256,7 @@ bool ProductFileHandler::saveProducts(const std::string& filePath, const Product
         bool hasIncrement2Fields = (!products[i].getAcronym().empty() || !products[i].getMeasurementUnit().empty() || !products[i].getBarcodeImagePath().empty());
 
         if (hasIncrement2Fields) {
-            file << products[i].getProductId() << " "
-                 << products[i].getBarcode() << " "
-                 << formatField(products[i].getAcronym()) << " "
-                 << formatField(products[i].getProductName()) << " "
-                 << formatField(products[i].getMeasurementUnit()) << " "
-                 << std::fixed << std::setprecision(2) << products[i].getPrice() << " "
-                 << std::fixed << std::setprecision(2) << products[i].getTax() << " "
-                 << std::fixed << std::setprecision(2) << products[i].getDiscount() << " "
-                 << products[i].getStockQuantity() << " "
-                 << formatField(products[i].getBarcodeImagePath())
-                 << " #\n";
+            writeIncrementProductLine(file, products[i]);
         } else {
             // Legacy 5/6 fields format
             file << products[i].getProductId() << " "
@@ -265,17 +287,7 @@ bool ProductFileHandler::saveProducts(const std::string& filePath, const Product
             bool hasIncrement2Fields = (!products[i].getAcronym().empty() || !products[i].getMeasurementUnit().empty() || !products[i].getBarcodeImagePath().empty());
 
             if (hasIncrement2Fields) {
-                fallback << products[i].getProductId() << " "
-                         << products[i].getBarcode() << " "
-                         << formatField(products[i].getAcronym()) << " "
-                         << formatField(products[i].getProductName()) << " "
-                         << formatField(products[i].getMeasurementUnit()) << " "
-                         << std::fixed << std::setprecision(2) << products[i].getPrice() << " "
-                         << std::fixed << std::setprecision(2) << products[i].getTax() << " "
-                         << std::fixed << std::setprecision(2) << products[i].getDiscount() << " "
-                         << products[i].getStockQuantity() << " "
-                         << formatField(products[i].getBarcodeImagePath())
-                         << " #\n";
+                writeIncrementProductLine(fallback, products[i]);
             } else {
                 fallback << products[i].getProductId() << " "
                          << products[i].getBarcode() << " "

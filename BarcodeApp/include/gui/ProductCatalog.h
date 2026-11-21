@@ -19,11 +19,14 @@ struct ProductInfo
     double discount = 0.0;        // Increment 2: Discount per unit
     int stock = 0;                // Increment 2: Available quantity
     std::string barcodeImagePath; // Increment 2: Barcode image path
+    std::string categoryId;       // Increment 3: two-digit category ID (optional on legacy rows)
 };
 
 // Thin adapter between the GUI and the product data.
 //
 // File format (Product.txt), one product per line, ending with #:
+// Increment 3 (Category ID appended after barcode image path):
+//   productId barcode acronym "Name" unit price tax discount stock "barcodeImagePath" categoryId ["description"] #
 // Increment 2:
 //   productId barcode acronym "Name" unit price tax discount stock "barcodeImagePath" #
 // Legacy Increment 1:

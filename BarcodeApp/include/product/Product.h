@@ -15,6 +15,7 @@ private:
     double discount;               // Increment 2: Discount per unit
     int stockQuantity;             // Available quantity
     std::string barcodeImagePath;  // Increment 2: Barcode image filename and path
+    std::string categoryId;        // Increment 3: two-digit category ID (Product.txt field 11)
 
 public:
     // Default constructor
@@ -35,7 +36,7 @@ public:
             const std::string& acr, const std::string& name,
             const std::string& unit, double pr, double tx,
             double disc, int stock, const std::string& imgPath,
-            const std::string& desc = "");
+            const std::string& desc = "", const std::string& catId = "");
 
     // Getters
     std::string getProductId() const;
@@ -49,6 +50,7 @@ public:
     double getDiscount() const;
     int getStockQuantity() const;
     std::string getBarcodeImagePath() const;
+    std::string getCategoryId() const;
 
     // Setters
     void setProductId(const std::string& id);
@@ -62,6 +64,7 @@ public:
     void setDiscount(double disc);
     void setStockQuantity(int stock);
     void setBarcodeImagePath(const std::string& path);
+    void setCategoryId(const std::string& catId);
 
     // Stock operation methods
     bool isAvailable(int requestedQty) const;

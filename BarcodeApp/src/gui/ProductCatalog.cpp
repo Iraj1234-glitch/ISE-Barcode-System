@@ -162,10 +162,26 @@ bool ProductCatalog::load()
             items[count].discount = discount;
             items[count].stock = stock;
             items[count].barcodeImagePath = fields[9];
+            items[count].categoryId = "";
             items[count].description = getCatalogPreservedDescription(fields[0], fields[3]);
-            if (fieldCount >= 11 && items[count].description.empty())
+            if (fieldCount >= 11)
             {
-                items[count].description = fields[10];
+                bool looksLikeCategory =
+                    fields[10].length() == 2 &&
+                    fields[10][0] >= '0' && fields[10][0] <= '9' &&
+                    fields[10][1] >= '0' && fields[10][1] <= '9';
+                if (looksLikeCategory)
+                {
+                    items[count].categoryId = fields[10];
+                    if (fieldCount >= 12 && items[count].description.empty())
+                    {
+                        items[count].description = fields[11];
+                    }
+                }
+                else if (items[count].description.empty())
+                {
+                    items[count].description = fields[10];
+                }
             }
             count++;
         }
@@ -193,6 +209,7 @@ bool ProductCatalog::load()
             items[count].tax = 0.0;
             items[count].discount = 0.0;
             items[count].barcodeImagePath = "";
+            items[count].categoryId = "";
             count++;
         }
     }

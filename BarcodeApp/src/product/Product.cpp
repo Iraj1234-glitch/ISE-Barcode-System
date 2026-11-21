@@ -15,6 +15,7 @@ Product::Product() {
     discount = 0.0;
     stockQuantity = 0;
     barcodeImagePath = "";
+    categoryId = "";
 }
 
 // Parameterized constructor without stock (defaults to 0)
@@ -32,6 +33,7 @@ Product::Product(const std::string& id, const std::string& bCode,
     discount = 0.0;
     stockQuantity = 0;
     barcodeImagePath = "";
+    categoryId = "";
 }
 
 // Parameterized constructor with stock
@@ -49,6 +51,7 @@ Product::Product(const std::string& id, const std::string& bCode,
     discount = 0.0;
     stockQuantity = (stock >= 0) ? stock : 0;
     barcodeImagePath = "";
+    categoryId = "";
 }
 
 // Increment 2 full constructor
@@ -56,7 +59,7 @@ Product::Product(const std::string& id, const std::string& bCode,
                  const std::string& acr, const std::string& name,
                  const std::string& unit, double pr, double tx,
                  double disc, int stock, const std::string& imgPath,
-                 const std::string& desc) {
+                 const std::string& desc, const std::string& catId) {
     productId = id;
     barcode = bCode;
     acronym = acr;
@@ -68,6 +71,7 @@ Product::Product(const std::string& id, const std::string& bCode,
     stockQuantity = (stock >= 0) ? stock : 0;
     barcodeImagePath = imgPath;
     description = desc;
+    categoryId = catId;
 }
 
 // Getters
@@ -113,6 +117,10 @@ int Product::getStockQuantity() const {
 
 std::string Product::getBarcodeImagePath() const {
     return barcodeImagePath;
+}
+
+std::string Product::getCategoryId() const {
+    return categoryId;
 }
 
 // Setters
@@ -168,6 +176,10 @@ void Product::setBarcodeImagePath(const std::string& path) {
     barcodeImagePath = path;
 }
 
+void Product::setCategoryId(const std::string& catId) {
+    categoryId = catId;
+}
+
 // Stock operation methods
 bool Product::isAvailable(int requestedQty) const {
     if (requestedQty <= 0) {
@@ -217,6 +229,9 @@ std::string Product::getFormattedDetails() const {
     oss << "Stock:       " << stockQuantity;
     if (!barcodeImagePath.empty()) {
         oss << "\nBarcode Img: " << barcodeImagePath;
+    }
+    if (!categoryId.empty()) {
+        oss << "\nCategory ID: " << categoryId;
     }
     return oss.str();
 }

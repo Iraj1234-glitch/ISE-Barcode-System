@@ -85,6 +85,8 @@ public:
     Product* getProductAt(int index);
     bool addProduct(const Product& product);
     bool updateProduct(const Product& product);
+    // Update an existing product identified by originalProductId. Rejects barcode collisions with other products.
+    bool updateProductById(const std::string& originalProductId, const Product& product);
     void clear();
 
     // ==========================================
@@ -128,6 +130,10 @@ public:
     double getProductTaxByBarcode(const std::string& barcode) const;
     double getProductDiscountByBarcode(const std::string& barcode) const;
     std::string getProductBarcodeImagePathByBarcode(const std::string& barcode) const;
+    std::string getProductCategoryIdByBarcode(const std::string& barcode) const;
+
+    // Increment 3: category-prefixed unique 6-digit barcode (first two digits = category ID)
+    std::string generateUniqueBarcodeForCategory(const std::string& categoryId) const;
 
     // ==========================================
     // 6. Stock Validation (without deduction)

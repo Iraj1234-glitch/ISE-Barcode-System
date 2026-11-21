@@ -21,13 +21,15 @@ public:
 
     // File loading functions
     // Reads records from filePath into products array.
-    // Supports both Increment 2 10-field records and legacy 5/6-field records.
+    // Supports Increment 3 11/12-field records, Increment 2 10-field records and legacy 5/6-field records.
+    // Increment 3 Product.txt (safest compatible extension — Category ID appended after barcode image path):
+    //   productId barcode acronym "Name" unit price tax discount stock "barcodeImagePath" categoryId ["description"] #
     bool loadProducts(const std::string& filePath, Product products[], int& productCount, int maxCapacity = MAX_PRODUCTS);
 
     // File saving functions
     // Saves products array into filePath with formatting preserving quotation marks and delimiters.
     // If includeStock is true, includes stock quantity.
-    // If products have Increment 2 fields, outputs all 10 fields followed by '#'.
+    // Increment 2/3 products are written as 11 fields (Category ID last required field) plus optional description, then '#'.
     bool saveProducts(const std::string& filePath, const Product products[], int productCount, bool includeStock = true);
 
     // Optional separate inventory file support (ProductID Stock #)

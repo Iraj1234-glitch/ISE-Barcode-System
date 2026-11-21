@@ -149,6 +149,24 @@ bool ProductManager::updateProduct(const Product& product) {
     return false;
 }
 
+bool ProductManager::updateProductById(const std::string& originalProductId, const Product& product) {
+    int idx = findIndexById(originalProductId);
+    if (idx == -1) {
+        return false;
+    }
+    if (product.getProductId() != originalProductId) {
+        if (findIndexById(product.getProductId()) != -1) {
+            return false;
+        }
+    }
+    int barcodeIdx = findIndexByBarcode(product.getBarcode());
+    if (barcodeIdx != -1 && barcodeIdx != idx) {
+        return false;
+    }
+    products[idx] = product;
+    return true;
+}
+
 void ProductManager::clear() {
     productCount = 0;
     processedOrderCount = 0;
@@ -323,6 +341,31 @@ std::string ProductManager::getProductBarcodeImagePathByBarcode(const std::strin
     const Product* p = findProductByBarcode(barcode);
     if (p != nullptr) {
         return p->getBarcodeImagePath();
+    }
+    return "";
+}
+
+std::string ProductManager::getProductCategoryIdByBarcode(const std::string& barcode) const {
+    const Product* p = findProductByBarcode(barcode);
+    if (p != nullptr) {
+        return p->getCategoryId();
+    }
+    return "";
+}
+
+std::string ProductManager::generateUniqueBarcodeForCategory(const std::string& categoryId) const {
+    if (categoryId.length() != 2 || categoryId[0] < '1' || categoryId[0] > '9' ||
+        categoryId[1] < '0' || categoryId[1] > '9') {
+        return "";
+    }
+
+    for (int sequence = 1; sequence <= 9999; sequence++) {
+        std::ostringstream oss;
+        oss << categoryId << std::setw(4) << std::setfill('0') << sequence;
+        std::string candidate = oss.str();
+        if (isValidBarcodeFormat(candidate) && findIndexByBarcode(candidate) == -1) {
+            return candidate;
+        }
     }
     return "";
 }
