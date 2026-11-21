@@ -1,0 +1,40 @@
+Increment 3 Product and Category file format (Member 1 / Iraj)
+==============================================================
+
+PCategory.txt
+-------------
+One category per line, ending with #.
+Quoted fields are used when a name or acronym contains spaces.
+
+  CategoryId CategoryName CategoryAcronym #
+
+CategoryId: exactly two digits, first digit cannot be 0 (barcode rule).
+Example:
+  10 Dairy DRY #
+  11 "Fresh Produce" FRPRD #
+
+
+Product.txt
+-----------
+Increment 2 fields are unchanged. Category ID is APPENDED after the barcode image path
+so existing 10-field Increment 2 files still load.
+
+Increment 3:
+  productId barcode acronym "Name" unit price tax discount stock "barcodeImagePath" categoryId ["description"] #
+
+Increment 2 (still supported):
+  productId barcode acronym "Name" unit price tax discount stock "barcodeImagePath" #
+
+Field 11 is Category ID (exactly two digits). Optional field 12 is description.
+Barcode first two digits must equal Category ID.
+
+Example:
+  P007 100007 WIDGET "Blue Widget" count 99.00 1.00 0.00 5 barcodes/100007.bmp 10 "A small widget" #
+
+
+Barcode generation
+------------------
+Uses existing BarcodeGenerator. Code is 6 digits: CCSSSS
+  CC   = selected category ID
+  SSSS = unique sequence for that category
+Image path convention (unchanged): barcodes/<code>.bmp
