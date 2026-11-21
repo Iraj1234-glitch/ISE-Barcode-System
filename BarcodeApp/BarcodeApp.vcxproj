@@ -42,17 +42,20 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
@@ -111,14 +114,30 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Lib\SFML-2.6.2-install\include;$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\include;$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\include\opencv4;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Lib\SFML-2.6.2-install\lib;$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\debug\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;ZXing.lib;opencv_core4d.lib;opencv_highgui4d.lib;opencv_imgcodecs4d.lib;opencv_imgproc4d.lib;opencv_videoio4d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
+    <PostBuildEvent>
+      <Command>if "$(Configuration)"=="Debug" (
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-graphics-d-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-window-d-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-d-2.dll" "$(TargetDir)"
+copy /Y "$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\debug\bin\*.dll" "$(TargetDir)"
+) else (
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-graphics-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-window-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-2.dll" "$(TargetDir)"
+copy /Y "$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\bin\*.dll" "$(TargetDir)"
+)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -129,27 +148,66 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Lib\SFML-2.6.2-install\include;$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\include;$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\include\opencv4;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Lib\SFML-2.6.2-install\lib;$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sfml-graphics.lib;sfml-window.lib;sfml-system.lib;ZXing.lib;opencv_core4.lib;opencv_highgui4.lib;opencv_imgcodecs4.lib;opencv_imgproc4.lib;opencv_videoio4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
+    <PostBuildEvent>
+      <Command>if "$(Configuration)"=="Debug" (
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-graphics-d-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-window-d-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-d-2.dll" "$(TargetDir)"
+copy /Y "$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\debug\bin\*.dll" "$(TargetDir)"
+) else (
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-graphics-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-window-2.dll" "$(TargetDir)"
+copy /Y "C:\Lib\SFML-2.6.2-install\bin\sfml-system-2.dll" "$(TargetDir)"
+copy /Y "$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\bin\*.dll" "$(TargetDir)"
+)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\billing\BillGenerator.cpp" />
     <ClCompile Include="src\camera_scanner\CameraScanner.cpp" />
     <ClCompile Include="src\generation\BarcodeGenerator.cpp" />
     <ClCompile Include="src\gui\mainWindow.cpp" />
+    <ClCompile Include="src\gui\ManagerProductWindow.cpp" />
     <ClCompile Include="src\image_scanner\imageScanner.cpp" />
+    <ClCompile Include="src\order\OrderManager.cpp" />
+    <ClCompile Include="src\product\Product.cpp" />
+    <ClCompile Include="src\product\ProductFileHandler.cpp" />
+    <ClCompile Include="src\product\ProductManager.cpp" />
+    <ClCompile Include="src\product\Category.cpp" />
+    <ClCompile Include="src\product\CategoryFileHandler.cpp" />
+    <ClCompile Include="src\product\CategoryManager.cpp" />
+    <ClCompile Include="src\product\ManagerProductService.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\billing\BillGenerator.h" />
     <ClInclude Include="include\camera_scanner\CameraScanner.h" />
     <ClInclude Include="include\generation\BarcodeGenerator.h" />
     <ClInclude Include="include\gui\mainWindow.h" />
+    <ClInclude Include="include\gui\ManagerProductWindow.h" />
     <ClInclude Include="include\image_scanner\imageScanner.h" />
+    <ClInclude Include="include\image_scanner\stb_image.h" />
+    <ClInclude Include="include\order\Order.h" />
+    <ClInclude Include="include\order\OrderManager.h" />
+    <ClInclude Include="include\product\Product.h" />
+    <ClInclude Include="include\product\ProductFileHandler.h" />
+    <ClInclude Include="include\product\ProductManager.h" />
+    <ClInclude Include="include\product\Category.h" />
+    <ClInclude Include="include\product\CategoryFileHandler.h" />
+    <ClInclude Include="include\product\CategoryManager.h" />
+    <ClInclude Include="include\product\ManagerProductService.h" />
+    <ClInclude Include="include\gui\ProductCatalog.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
