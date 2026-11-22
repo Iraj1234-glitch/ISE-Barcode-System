@@ -51,6 +51,17 @@ enum FieldId
     FIELD_TENDERED
 };
 
+enum PageId {
+    PAGE_DASHBOARD = 0,
+    PAGE_NEW_ORDER = 1,
+    PAGE_PRODUCT_DESC = 2,
+    PAGE_PAYMENT = 3,
+    PAGE_RECEIPT = 4,
+    // ------------------- manager pages -------------------
+    PAGE_MANAGER_PRODUCT = 5,
+    PAGE_MANAGER_REPORTS = 6
+};
+
 class MainWindow
 {
 private:
