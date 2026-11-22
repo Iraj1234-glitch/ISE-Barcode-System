@@ -2,13 +2,12 @@
 
 #include <SFML/Graphics.hpp>
 #include <memory>
-#include <string>
+#include <cstring>
 
 #include "ProductCatalog.h"
 #include "../product/ProductManager.h"
 #include "../order/OrderManager.h"
-#include "Role.h"
-#include "ManagerProductWindow.h"   
+#include "ManagerProductWindow.h"   // existing manager product UI (Member 1)
 
 // Simple rectangle used for drawing and click detection
 struct UiRect
@@ -31,12 +30,15 @@ struct CartItem
 enum PageId
 {
     PAGE_DASHBOARD = 0,
-    PAGE_GENERATE = 1,
-    PAGE_IMAGE = 2,
-    PAGE_CAMERA = 3,
-    PAGE_ORDER = 4,
-    PAGE_PAYMENT = 5,
-    PAGE_BILL = 6
+    PAGE_GENERATE  = 1,
+    PAGE_IMAGE     = 2,
+    PAGE_CAMERA    = 3,
+    PAGE_ORDER     = 4,
+    PAGE_PAYMENT   = 5,
+    PAGE_BILL      = 6,
+    // ---- Manager pages ----
+    PAGE_MANAGER_PRODUCT = 7,
+    PAGE_MANAGER_REPORTS = 8
 };
 
 // Text box that currently receives the keyboard input
@@ -51,17 +53,6 @@ enum FieldId
     FIELD_TENDERED
 };
 
-enum PageId {
-    PAGE_DASHBOARD = 0,
-    PAGE_NEW_ORDER = 1,
-    PAGE_PRODUCT_DESC = 2,
-    PAGE_PAYMENT = 3,
-    PAGE_RECEIPT = 4,
-    // ------------------- manager pages -------------------
-    PAGE_MANAGER_PRODUCT = 5,
-    PAGE_MANAGER_REPORTS = 6
-};
-
 class MainWindow
 {
 private:
@@ -70,15 +61,15 @@ private:
     sf::Clock caretClock;
 
     sf::Texture previewTexture;
-    sf::Sprite previewSprite;
+    sf::Sprite   previewSprite;
 
     // Modules
     std::unique_ptr<OrderManager> orderManager;
-    ProductManager productManager;
-    bool inventoryEnabled;
+    ProductManager                 productManager;
+    bool                           inventoryEnabled;
 
-    int currentPage;
-    FieldId activeField;
+    int      currentPage;
+    FieldId  activeField;
 
     // Generator / scanner pages
     std::string inputCode;
@@ -96,25 +87,25 @@ private:
     std::string orderCode;
     std::string orderQty;
 
-    bool productFound;
-    bool showDescription;
+    bool        productFound;
+    bool        showDescription;
     ProductInfo foundProduct;
 
     CartItem cart[MAX_DETAILS_PER_ORDER];
-    int cartCount;
-    int selectedRow;
-    int cartScroll;
+    int      cartCount;
+    int      selectedRow;
+    int      cartScroll;
 
     // Payment page
     std::string payMode;       // "cash", "card" or "wallet"
     std::string payMerchant;
     std::string payTendered;
-    bool walletMenuOpen;       // wallet dropdown is expanded
+    bool        walletMenuOpen;   // wallet dropdown is expanded
 
     // Final bill (a copy, so a new order can be started)
     CartItem billItems[MAX_DETAILS_PER_ORDER];
-    int billItemCount;
-    int billScroll;
+    int      billItemCount;
+    int      billScroll;
     std::string billOrderId;
     std::string billDate;
     std::string billTime;
@@ -122,12 +113,12 @@ private:
     std::string billContact;
     std::string billMode;
     std::string billMerchant;
-    double billSubtotal;
-    double billTax;
-    double billDiscount;
-    double billTotal;
-    double billReceived;
-    double billChange;
+    double      billSubtotal;
+    double      billTax;
+    double      billDiscount;
+    double      billTotal;
+    double      billReceived;
+    double      billChange;
 
     // Events
     void handleEvents();
@@ -177,7 +168,9 @@ private:
     void drawMessage(float x, float y, int size);
     void drawBackButton();
 
-    // Pages
+    // ======================================================================
+    // Sidebar and page drawing
+    // ======================================================================
     void drawSidebar();
     void drawDashboard();
     void drawGenerator();
@@ -217,12 +210,22 @@ private:
     double cartTotalTax() const;
     double cartTotalDiscount() const;
     double cartTotal() const;
-    int cartUnits() const;
+    int    cartUnits() const;
     std::string* activeText();
-    std::string buildBillText() const;
+    std::string   buildBillText() const;
 
 public:
     MainWindow();
 
     void run();
+
+    // --------------------------------------------------------------
+    // NEW: Manager‑side UI members (added after the original class)
+    // --------------------------------------------------------------
+private:
+    sf::RectangleShape managerButton_;   // side‑bar button that appears for Manager role
+    sf::Text           managerLabel_;    // label drawn on top of the button
+
+    ManagerProductWindow managerProductWindow_;   // re‑uses Member 1’s window class
+    ReportManager        reportManager_;        // our new six‑report helper
 };
