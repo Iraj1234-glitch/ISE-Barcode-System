@@ -7,7 +7,7 @@
 #include "ProductCatalog.h"
 #include "../product/ProductManager.h"
 #include "../order/OrderManager.h"
-#include "ManagerProductWindow.h"   // existing manager product UI (Member 1)
+#include "ManagerProductWindow.h"   // existing manager UI (Member 1)
 
 // Simple rectangle used for drawing and click detection
 struct UiRect
@@ -223,9 +223,11 @@ public:
     // NEW: Manager‑side UI members (added after the original class)
     // --------------------------------------------------------------
 private:
-    sf::RectangleShape managerButton_;   // side‑bar button that appears for Manager role
-    sf::Text           managerLabel_;    // label drawn on top of the button
+    // Manager button appears only when the user is in Manager role
+    sf::RectangleShape managerButton_;
+    sf::Text           managerLabel_;
 
-    ManagerProductWindow managerProductWindow_;   // re‑uses Member 1’s window class
-    ReportManager        reportManager_;        // our new six‑report helper
+    // Embedded windows (reuse existing manager product UI, new report UI)
+    ManagerProductWindow managerProductWindow_;
+    ReportManager        reportManager_;
 };
