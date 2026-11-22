@@ -17,10 +17,6 @@
 #include <iostream>
 #include <sstream>
 
-#pragma comment(lib, "Comdlg32.lib")
-
-using namespace std;
-
 // ======================================================================
 // Layout constants (shared by drawing code and click detection)
 // ======================================================================
@@ -317,6 +313,7 @@ static string openImageDialog(HWND owner)
     ofn.nMaxFile = MAX_PATH;
     ofn.lpstrFilter =
         "Image Files\0*.bmp;*.png;*.jpg;*.jpeg\0All Files\0*.*\0";
+
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
@@ -1035,10 +1032,12 @@ void MainWindow::drawPayment()
         window.draw(box);
 
         if (payMerchant.empty())
-            drawText("Select a wallet", R_PAYFIELD.x + 10,
+            drawText("Select a wallet",
+                R_PAYFIELD.x + 10,
                 R_PAYFIELD.y + (R_PAYFIELD.h - 24) / 2, 19, COL_MUTED);
         else
-            drawText(payMerchant, R_PAYFIELD.x + 10,
+            drawText(payMerchant,
+                R_PAYFIELD.x + 10,
                 R_PAYFIELD.y + (R_PAYFIELD.h - 24) / 2, 19, COL_TITLE);
 
         // Down arrow
@@ -1155,8 +1154,7 @@ void MainWindow::drawBill()
     if (billItemCount > BILL_ROWS)
     {
         drawText(
-            "Showing " + to_string(billScroll + 1) + "-" +
-            to_string(min(billScroll + BILL_ROWS, billItemCount)) +
+            "Showing " + to_string(billScroll + 1) + "-" + to_string(min(billScroll + BILL_ROWS, billItemCount)) +
             " of " + to_string(billItemCount) + " items (mouse wheel)",
             left, 521, 13, COL_MUTED
         );
@@ -1397,7 +1395,8 @@ void MainWindow::clickOrder(float x, float y)
 
     // Select a row of the order table
     else if (x >= TBL_X && x <= TBL_X + TBL_W &&
-        y >= TBL_Y + HDR_H && y < TBL_Y + HDR_H + TBL_ROWS * ROW_H)
+        y >= TBL_Y + HDR_H &&
+        y < TBL_Y + HDR_H + TBL_ROWS * ROW_H)
     {
         int row = cartScroll + (int)((y - TBL_Y - HDR_H) / ROW_H);
 
@@ -1708,7 +1707,6 @@ void MainWindow::loadPreview(const string& path)
     }
 }
 
-
 void MainWindow::generateBarcode()
 {
     if (inputCode.length() != 6)
@@ -1733,7 +1731,7 @@ void MainWindow::generateBarcode()
     }
 
     // Automatically use the barcode number as the filename
-    string outputPath = "barcodes\\" + inputCode + ".bmp";
+    string outputPath = "barcodes\\\\" + inputCode + ".bmp";
 
     BarcodeGenerator generator;
 
@@ -1749,7 +1747,6 @@ void MainWindow::generateBarcode()
         setMessage("Barcode generation failed.", false);
     }
 }
-
 
 void MainWindow::scanImage()
 {
@@ -2117,8 +2114,7 @@ void MainWindow::changeQuantity(int delta)
             if (wanted + alreadyInCart > available)
             {
                 setMessage("Insufficient stock. Available: " + to_string(available) +
-                    (alreadyInCart > 0 ? ", already in order: " + to_string(alreadyInCart) : string("")) +
-                    ".", false);
+                    (alreadyInCart > 0 ? ", already in order: " + to_string(alreadyInCart) : "") + ".", false);
                 return;
             }
         }
