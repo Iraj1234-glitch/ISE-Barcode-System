@@ -7,6 +7,8 @@
 #include "ProductCatalog.h"
 #include "../product/ProductManager.h"
 #include "../order/OrderManager.h"
+#include "Role.h"
+#include "ManagerProductWindow.h"   
 
 // Simple rectangle used for drawing and click detection
 struct UiRect
