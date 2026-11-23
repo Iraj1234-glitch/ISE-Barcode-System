@@ -1,12 +1,10 @@
 #define NOMINMAX
 
-#include "../../include/gui/mainWindow.h"
-#include "../../include/gui/ManagerProductWindow.h"
+#include "../../include/gui/MainWindow.h"
 
 #include "../../include/generation/BarcodeGenerator.h"
 #include "../../include/image_scanner/imageScanner.h"
 #include "../../include/camera_scanner/CameraScanner.h"
-#include "../../include/billing/BillGenerator.h"
 
 #include <windows.h>
 #include <commdlg.h>
@@ -30,15 +28,15 @@ using namespace std;
 static const int WIN_W = 1200;
 static const int WIN_H = 760;
 
-static const int SIDE_COUNT = 6;
-static const float SIDE_Y[SIDE_COUNT] = { 140, 195, 250, 305, 360, 415 };
+static const int SIDE_COUNT = 5;
+static const float SIDE_Y[SIDE_COUNT] = { 140, 195, 250, 305, 360 };
 static const int SIDE_PAGE[SIDE_COUNT] =
 {
-    PAGE_DASHBOARD, PAGE_ORDER, PAGE_GENERATE, PAGE_IMAGE, PAGE_CAMERA, PAGE_HISTORY
+    PAGE_DASHBOARD, PAGE_ORDER, PAGE_GENERATE, PAGE_IMAGE, PAGE_CAMERA
 };
 static const char* SIDE_LABEL[SIDE_COUNT] =
 {
-    "Dashboard", "New Order", "Generate Barcode", "Image Scanner", "Camera Scanner", "Order History"
+    "Dashboard", "New Order", "Generate Barcode", "Image Scanner", "Camera Scanner"
 };
 
 static const UiRect R_BACK = { 990, 700, 180, 45 };
@@ -48,18 +46,6 @@ static const UiRect R_DASH_ORDER = { 260, 225, 300, 55 };
 static const UiRect R_DASH_GEN = { 260, 295, 300, 55 };
 static const UiRect R_DASH_IMG = { 260, 365, 300, 55 };
 static const UiRect R_DASH_CAM = { 260, 435, 300, 55 };
-static const UiRect R_DASH_MANAGER = { 260, 505, 300, 55 };
-static const UiRect R_DASH_HISTORY = { 260, 575, 300, 55 };
-
-// Order history
-static const float HISTORY_X = 250;
-static const float HISTORY_Y = 125;
-static const float HISTORY_ROW_H = 38;
-static const int HISTORY_ROWS = 10;
-static const UiRect R_HISTORY_HOLD = { 850, 180, 270, 42 };
-static const UiRect R_HISTORY_PAID = { 850, 235, 270, 42 };
-static const UiRect R_HISTORY_ARCHIVE = { 850, 290, 270, 42 };
-static const UiRect R_HISTORY_REFRESH = { 850, 345, 270, 42 };
 
 // Generator
 static const UiRect R_GEN_INPUT = { 260, 165, 300, 48 };
@@ -406,8 +392,6 @@ MainWindow::MainWindow()
     cartCount = 0;
     selectedRow = -1;
     cartScroll = 0;
-    selectedHistoryIndex = -1;
-    historyScroll = 0;
 
     payMode = "cash";
     payMerchant = "";
@@ -680,12 +664,10 @@ void MainWindow::drawDashboard()
     drawButton(R_DASH_GEN, "Generate Barcode", COL_BLUE);
     drawButton(R_DASH_IMG, "Scan an Image", COL_BLUE);
     drawButton(R_DASH_CAM, "Scan Using Camera", COL_BLUE);
-    drawButton(R_DASH_MANAGER, "Manage Products & Categories", COL_GREEN);
-    drawButton(R_DASH_HISTORY, "View Order History & Status", COL_GREEN);
 
     drawText(
         "Record orders, scan six-digit product barcodes and print bills.",
-        260, 650, 16, sf::Color(100, 110, 125)
+        260, 520, 16, sf::Color(100, 110, 125)
     );
 
     if (productManager.getProductCount() == 0)
@@ -1234,7 +1216,6 @@ void MainWindow::draw()
     case PAGE_ORDER:     drawOrderPage(); break;
     case PAGE_PAYMENT:   drawPayment(); break;
     case PAGE_BILL:      drawBill(); break;
-    case PAGE_HISTORY:   drawOrderHistory(); break;
     }
 
     window.display();
@@ -1281,7 +1262,6 @@ void MainWindow::handleClick(float x, float y)
     case PAGE_ORDER:     clickOrder(x, y); break;
     case PAGE_PAYMENT:   clickPayment(x, y); break;
     case PAGE_BILL:      clickBill(x, y); break;
-    case PAGE_HISTORY:   clickHistory(x, y); break;
     }
 }
 
@@ -1298,24 +1278,6 @@ void MainWindow::clickDashboard(float x, float y)
 
     else if (hit(R_DASH_CAM, x, y))
         currentPage = PAGE_CAMERA;
-
-    else if (hit(R_DASH_MANAGER, x, y))
-    {
-        // The manager window owns the product/category editing workflow.
-        // Re-load products after it closes so the POS immediately sees changes.
-        ManagerProductWindow managerApp("Product.txt", "PCategory.txt", "barcodes");
-        managerApp.run();
-
-        inventoryEnabled = productManager.loadProducts();
-        setMessage("Product catalog refreshed after manager session.", true);
-    }
-
-    else if (hit(R_DASH_HISTORY, x, y))
-    {
-        selectedHistoryIndex = -1;
-        historyScroll = 0;
-        currentPage = PAGE_HISTORY;
-    }
 }
 
 void MainWindow::clickGenerator(float x, float y)
@@ -1548,16 +1510,6 @@ void MainWindow::handleScroll(float delta, float x, float y)
     {
         billScroll += step;
         clampBillScroll();
-    }
-    else if (currentPage == PAGE_HISTORY &&
-        x >= HISTORY_X && x <= HISTORY_X + 570 &&
-        y >= HISTORY_Y && y <= HISTORY_Y + HISTORY_ROWS * HISTORY_ROW_H)
-    {
-        historyScroll += step;
-        int maxScroll = orderManager->getOrderCount() - HISTORY_ROWS;
-        if (maxScroll < 0) maxScroll = 0;
-        if (historyScroll < 0) historyScroll = 0;
-        if (historyScroll > maxScroll) historyScroll = maxScroll;
     }
 }
 
@@ -2307,7 +2259,7 @@ void MainWindow::confirmPayment()
 
     if (!detailsSaved)
     {
-        bool cancelled = orderManager->updateOrderStatus(orderId, "on-hold");
+        bool cancelled = orderManager->updateOrderStatus(orderId, "cancelled");
         if (cancelled)
             setMessage("Could not save all product lines. The order was cancelled; payment was not finalized. Please try again.", false);
         else
@@ -2323,7 +2275,7 @@ void MainWindow::confirmPayment()
         Order* savedOrder = orderManager->findOrder(orderId);
         if (savedOrder == nullptr || !productManager.processOrderDeduction(*savedOrder))
         {
-            bool cancelled = orderManager->updateOrderStatus(orderId, "on-hold");
+            bool cancelled = orderManager->updateOrderStatus(orderId, "cancelled");
             if (cancelled)
                 setMessage("Stock could not be deducted. The order was cancelled; payment was not finalized.", false);
             else
@@ -2343,7 +2295,7 @@ void MainWindow::confirmPayment()
             if (savedOrder != nullptr)
                 productManager.restoreOrderStock(*savedOrder);
         }
-        bool cancelled = orderManager->updateOrderStatus(orderId, "on-hold");
+        bool cancelled = orderManager->updateOrderStatus(orderId, "cancelled");
         if (cancelled)
             setMessage("The order could not be finalized as paid and was cancelled. Please try payment again.", false);
         else
@@ -2443,183 +2395,23 @@ string MainWindow::buildBillText() const
     return out.str();
 }
 
-void MainWindow::drawOrderHistory()
-{
-    drawText("Order History", 250, 30, 32, COL_TITLE);
-    drawText("Select an order to inspect its items or update its status.",
-        250, 78, 16, COL_MUTED);
-
-    // Table header
-    sf::RectangleShape header(sf::Vector2f(570, 32));
-    header.setPosition(HISTORY_X, HISTORY_Y);
-    header.setFillColor(sf::Color(24, 35, 55));
-    window.draw(header);
-
-    drawText("Order ID", 260, HISTORY_Y + 6, 14, sf::Color::White);
-    drawText("Date", 365, HISTORY_Y + 6, 14, sf::Color::White);
-    drawText("Customer", 465, HISTORY_Y + 6, 14, sf::Color::White);
-    drawText("Amount", 650, HISTORY_Y + 6, 14, sf::Color::White);
-    drawText("Status", 745, HISTORY_Y + 6, 14, sf::Color::White);
-
-    int count = orderManager->getOrderCount();
-    if (count == 0)
-    {
-        drawText("No orders have been recorded yet.", HISTORY_X + 10, HISTORY_Y + 48, 16, COL_MUTED);
-    }
-
-    for (int row = 0; row < HISTORY_ROWS; row++)
-    {
-        int index = historyScroll + row;
-        if (index >= count) break;
-
-        const Order* order = orderManager->getOrderAt(index);
-        if (order == nullptr) continue;
-
-        float y = HISTORY_Y + 34 + row * HISTORY_ROW_H;
-        sf::RectangleShape item(sf::Vector2f(570, HISTORY_ROW_H - 2));
-        item.setPosition(HISTORY_X, y);
-        item.setFillColor(index == selectedHistoryIndex
-            ? sf::Color(210, 235, 222)
-            : (row % 2 == 0 ? sf::Color(255, 255, 255) : sf::Color(237, 240, 245)));
-        window.draw(item);
-
-        drawText(order->getOrderId(), 260, y + 8, 13, COL_TEXT);
-        drawText(order->getOrderDate(), 365, y + 8, 13, COL_TEXT);
-        drawText(fitText(order->getCustomerName(), 22), 465, y + 8, 13, COL_TEXT);
-        drawText(money(order->getPaymentAmount()), 650, y + 8, 13, COL_TEXT);
-        drawText(order->getOrderStatus(), 745, y + 8, 13, COL_TEXT);
-    }
-
-    drawButton(R_HISTORY_HOLD, "Set Selected: On Hold", COL_BLUE);
-    drawButton(R_HISTORY_PAID, "Resume Selected Order", COL_GREEN);
-    drawButton(R_HISTORY_ARCHIVE, "Archive Selected", COL_GREY);
-    drawButton(R_HISTORY_REFRESH, "Reload Orders", COL_BLUE);
-
-    if (selectedHistoryIndex >= 0 && selectedHistoryIndex < count)
-    {
-        const Order* selected = orderManager->getOrderAt(selectedHistoryIndex);
-        if (selected != nullptr)
-        {
-            drawText("Selected Order Details", 850, 430, 19, COL_TITLE);
-            drawText("ID: " + selected->getOrderId(), 850, 465, 14, COL_TEXT);
-            drawText("Customer: " + fitText(selected->getCustomerName(), 28), 850, 490, 14, COL_TEXT);
-            drawText("Contact: " + fitText(selected->getCustomerContact(), 25), 850, 515, 14, COL_TEXT);
-            drawText("Payment: " + modeLabel(selected->getPaymentMode()), 850, 540, 14, COL_TEXT);
-            drawText("Items:", 850, 575, 14, COL_TEXT);
-
-            for (int i = 0; i < selected->getDetailCount() && i < 5; i++)
-            {
-                const OrderDetail& detail = selected->getDetail(i);
-                drawText(detail.getProductId() + "  x " + to_string(detail.getQuantity()),
-                    865, 600 + i * 22, 13, COL_MUTED);
-            }
-        }
-    }
-    else
-    {
-        drawText("Select an order from the list.", 850, 440, 15, COL_MUTED);
-    }
-
-    drawMessage(250, 665, 15);
-    drawBackButton();
-}
-
-void MainWindow::clickHistory(float x, float y)
-{
-    if (hit(R_HISTORY_HOLD, x, y) ||
-        hit(R_HISTORY_PAID, x, y) ||
-        hit(R_HISTORY_ARCHIVE, x, y))
-    {
-        if (selectedHistoryIndex < 0 || selectedHistoryIndex >= orderManager->getOrderCount())
-        {
-            setMessage("Select an order first.", false);
-            return;
-        }
-
-        const Order* selected = orderManager->getOrderAt(selectedHistoryIndex);
-        if (selected == nullptr)
-        {
-            setMessage("The selected order could not be found.", false);
-            return;
-        }
-
-        string newStatus;
-        if (hit(R_HISTORY_HOLD, x, y)) newStatus = "on-hold";
-        else if (hit(R_HISTORY_PAID, x, y)) newStatus = "in-progress";
-        else newStatus = "archived";
-
-        string id = selected->getOrderId();
-        if (orderManager->updateOrderStatus(id, newStatus))
-            setMessage("Order " + id + " updated to " + newStatus + ".", true);
-        else
-            setMessage("Could not update the selected order status.", false);
-        return;
-    }
-
-    if (hit(R_HISTORY_REFRESH, x, y))
-    {
-        if (orderManager->loadAll())
-        {
-            selectedHistoryIndex = -1;
-            historyScroll = 0;
-            setMessage("Orders reloaded from Order.txt and OrderDetail.txt.", true);
-        }
-        else
-        {
-            setMessage("Could not reload order files.", false);
-        }
-        return;
-    }
-
-    if (x >= HISTORY_X && x <= HISTORY_X + 570 &&
-        y >= HISTORY_Y + 34 && y < HISTORY_Y + 34 + HISTORY_ROWS * HISTORY_ROW_H)
-    {
-        int row = static_cast<int>((y - HISTORY_Y - 34) / HISTORY_ROW_H);
-        int index = historyScroll + row;
-        if (index >= 0 && index < orderManager->getOrderCount())
-        {
-            selectedHistoryIndex = index;
-            setMessage("", false);
-        }
-    }
-}
-
 void MainWindow::saveBillToFile()
 {
-    // Use the billing module for the structured Bill.txt record and keep
-    // the GUI's customer-friendly receipt as a separate per-order file.
-    BillGenerator billing;
-    for (int i = 0; i < billItemCount; i++)
-    {
-        if (!billing.addProduct(
-            billItems[i].barcode,
-            billItems[i].name,
-            billItems[i].price,
-            billItems[i].quantity,
-            billItems[i].tax,
-            billItems[i].discount))
-        {
-            setMessage("The billing module rejected an item. The receipt was not saved.", false);
-            return;
-        }
-    }
-
-    if (!billing.saveBill())
-    {
-        setMessage("Could not save the structured bill record to Bill.txt.", false);
-        return;
-    }
-
     string path = "Bill_" + billOrderId + ".txt";
+
     ofstream file(path.c_str());
-    if (!file.is_open())
+    if (file.is_open())
     {
-        setMessage("Bill record was saved, but the receipt file could not be opened.", false);
-        return;
+        file << buildBillText();
+        file.close();
     }
 
-    file << buildBillText();
-    file.close();
+    ofstream billFile("Bill.txt", ios::app);
+    if (billFile.is_open())
+    {
+        billFile << buildBillText() << "\n";
+        billFile.close();
+    }
 
-    setMessage("Bill saved as " + path + " and recorded by the billing module in Bill.txt.", true);
+    setMessage("Bill saved as " + path + " and Bill.txt in the program folder.", true);
 }
