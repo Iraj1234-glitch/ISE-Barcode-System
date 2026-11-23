@@ -2,12 +2,11 @@
 
 #include <SFML/Graphics.hpp>
 #include <memory>
-#include <cstring>
+#include <string>
 
 #include "ProductCatalog.h"
 #include "../product/ProductManager.h"
 #include "../order/OrderManager.h"
-#include "ManagerProductWindow.h"   // existing manager UI (Member 1)
 
 // Simple rectangle used for drawing and click detection
 struct UiRect
@@ -30,15 +29,13 @@ struct CartItem
 enum PageId
 {
     PAGE_DASHBOARD = 0,
-    PAGE_GENERATE  = 1,
-    PAGE_IMAGE     = 2,
-    PAGE_CAMERA    = 3,
-    PAGE_ORDER     = 4,
-    PAGE_PAYMENT   = 5,
-    PAGE_BILL      = 6,
-    // ---- Manager pages ----
-    PAGE_MANAGER_PRODUCT = 7,
-    PAGE_MANAGER_REPORTS = 8
+    PAGE_GENERATE = 1,
+    PAGE_IMAGE = 2,
+    PAGE_CAMERA = 3,
+    PAGE_ORDER = 4,
+    PAGE_PAYMENT = 5,
+    PAGE_BILL = 6,
+    PAGE_HISTORY = 7
 };
 
 // Text box that currently receives the keyboard input
@@ -61,15 +58,15 @@ private:
     sf::Clock caretClock;
 
     sf::Texture previewTexture;
-    sf::Sprite   previewSprite;
+    sf::Sprite previewSprite;
 
     // Modules
     std::unique_ptr<OrderManager> orderManager;
-    ProductManager                 productManager;
-    bool                           inventoryEnabled;
+    ProductManager productManager;
+    bool inventoryEnabled;
 
-    int      currentPage;
-    FieldId  activeField;
+    int currentPage;
+    FieldId activeField;
 
     // Generator / scanner pages
     std::string inputCode;
@@ -87,25 +84,29 @@ private:
     std::string orderCode;
     std::string orderQty;
 
-    bool        productFound;
-    bool        showDescription;
+    bool productFound;
+    bool showDescription;
     ProductInfo foundProduct;
 
     CartItem cart[MAX_DETAILS_PER_ORDER];
-    int      cartCount;
-    int      selectedRow;
-    int      cartScroll;
+    int cartCount;
+    int selectedRow;
+    int cartScroll;
+
+    // Order history selection and scrolling
+    int selectedHistoryIndex;
+    int historyScroll;
 
     // Payment page
     std::string payMode;       // "cash", "card" or "wallet"
     std::string payMerchant;
     std::string payTendered;
-    bool        walletMenuOpen;   // wallet dropdown is expanded
+    bool walletMenuOpen;       // wallet dropdown is expanded
 
     // Final bill (a copy, so a new order can be started)
     CartItem billItems[MAX_DETAILS_PER_ORDER];
-    int      billItemCount;
-    int      billScroll;
+    int billItemCount;
+    int billScroll;
     std::string billOrderId;
     std::string billDate;
     std::string billTime;
@@ -113,12 +114,12 @@ private:
     std::string billContact;
     std::string billMode;
     std::string billMerchant;
-    double      billSubtotal;
-    double      billTax;
-    double      billDiscount;
-    double      billTotal;
-    double      billReceived;
-    double      billChange;
+    double billSubtotal;
+    double billTax;
+    double billDiscount;
+    double billTotal;
+    double billReceived;
+    double billChange;
 
     // Events
     void handleEvents();
@@ -133,6 +134,7 @@ private:
     void clickOrder(float x, float y);
     void clickPayment(float x, float y);
     void clickBill(float x, float y);
+    void clickHistory(float x, float y);
 
     // Drawing helpers
     void draw();
@@ -168,9 +170,7 @@ private:
     void drawMessage(float x, float y, int size);
     void drawBackButton();
 
-    // ======================================================================
-    // Sidebar and page drawing
-    // ======================================================================
+    // Pages
     void drawSidebar();
     void drawDashboard();
     void drawGenerator();
@@ -182,6 +182,7 @@ private:
     void drawOrderSummary();
     void drawPayment();
     void drawBill();
+    void drawOrderHistory();
 
     // Existing operations
     void generateBarcode();
@@ -210,24 +211,12 @@ private:
     double cartTotalTax() const;
     double cartTotalDiscount() const;
     double cartTotal() const;
-    int    cartUnits() const;
+    int cartUnits() const;
     std::string* activeText();
-    std::string   buildBillText() const;
+    std::string buildBillText() const;
 
 public:
     MainWindow();
 
     void run();
-
-    // --------------------------------------------------------------
-    // NEW: Manager‑side UI members (added after the original class)
-    // --------------------------------------------------------------
-private:
-    // Manager button appears only when the user is in Manager role
-    sf::RectangleShape managerButton_;
-    sf::Text           managerLabel_;
-
-    // Embedded windows (reuse existing manager product UI, new report UI)
-    ManagerProductWindow managerProductWindow_;
-    ReportManager        reportManager_;
 };
