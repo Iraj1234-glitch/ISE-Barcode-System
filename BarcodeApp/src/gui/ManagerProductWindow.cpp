@@ -145,6 +145,9 @@ void ManagerProductWindow::loadProductIntoForm(int index) {
     barcodeInput = p->getBarcode();
     imagePathInput = p->getBarcodeImagePath();
     selectedCategoryId = p->getCategoryId();
+    if (selectedCategoryId.empty()) {
+        selectedCategoryId = "10";
+    }
     selectedCategoryIndex = -1;
     for (int i = 0; i < categoryManager.getCategoryCount(); i++) {
         if (categoryManager.getCategoryAt(i)->getCategoryId() == selectedCategoryId) {
