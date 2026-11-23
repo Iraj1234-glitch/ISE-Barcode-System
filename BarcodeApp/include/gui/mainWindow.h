@@ -34,8 +34,7 @@ enum PageId
     PAGE_CAMERA = 3,
     PAGE_ORDER = 4,
     PAGE_PAYMENT = 5,
-    PAGE_BILL = 6,
-    PAGE_HISTORY = 7
+    PAGE_BILL = 6
 };
 
 // Text box that currently receives the keyboard input
@@ -93,10 +92,6 @@ private:
     int selectedRow;
     int cartScroll;
 
-    // Order history selection and scrolling
-    int selectedHistoryIndex;
-    int historyScroll;
-
     // Payment page
     std::string payMode;       // "cash", "card" or "wallet"
     std::string payMerchant;
@@ -134,7 +129,6 @@ private:
     void clickOrder(float x, float y);
     void clickPayment(float x, float y);
     void clickBill(float x, float y);
-    void clickHistory(float x, float y);
 
     // Drawing helpers
     void draw();
@@ -182,7 +176,6 @@ private:
     void drawOrderSummary();
     void drawPayment();
     void drawBill();
-    void drawOrderHistory();
 
     // Existing operations
     void generateBarcode();
