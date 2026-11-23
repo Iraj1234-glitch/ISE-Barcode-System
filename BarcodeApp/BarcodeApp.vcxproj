@@ -182,6 +182,7 @@ copy /Y "$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\bin\*.dll" "$(Targ
     <ClCompile Include="src\generation\BarcodeGenerator.cpp" />
     <ClCompile Include="src\gui\mainWindow.cpp" />
     <ClCompile Include="src\gui\ManagerProductWindow.cpp" />
+    <ClCompile Include="src\gui\SeasonManagementWindow.cpp" />
     <ClCompile Include="src\image_scanner\imageScanner.cpp" />
     <ClCompile Include="src\order\OrderManager.cpp" />
     <ClCompile Include="src\product\Product.cpp" />
@@ -198,6 +199,7 @@ copy /Y "$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\bin\*.dll" "$(Targ
     <ClInclude Include="include\generation\BarcodeGenerator.h" />
     <ClInclude Include="include\gui\mainWindow.h" />
     <ClInclude Include="include\gui\ManagerProductWindow.h" />
+    <ClInclude Include="include\gui\SeasonManagementWindow.h" />
     <ClInclude Include="include\image_scanner\imageScanner.h" />
     <ClInclude Include="include\image_scanner\stb_image.h" />
     <ClInclude Include="include\order\Order.h" />

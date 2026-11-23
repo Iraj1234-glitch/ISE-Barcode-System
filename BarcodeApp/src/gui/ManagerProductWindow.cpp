@@ -1,4 +1,5 @@
 #include "../../include/gui/ManagerProductWindow.h"
+#include "../../include/gui/SeasonManagementWindow.h"
 #include "../../include/product/ProductFileHandler.h"
 #include <sstream>
 #include <iomanip>
@@ -221,6 +222,12 @@ void ManagerProductWindow::handleTyping(unsigned int unicode) {
 void ManagerProductWindow::handleClick(float x, float y) {
     activeField = MF_NONE;
 
+    if (hit(x, y, 1020, 7, 240, 34)) {
+        SeasonManagementWindow seasonWindow("Seasons.txt");
+        seasonWindow.run();
+        return;
+    }
+
     if (hit(x, y, 20, 70, 70, 28)) activeField = MF_CAT_ID;
     else if (hit(x, y, 100, 70, 180, 28)) activeField = MF_CAT_NAME;
     else if (hit(x, y, 290, 70, 80, 28)) activeField = MF_CAT_ACRONYM;
@@ -368,6 +375,7 @@ void ManagerProductWindow::draw() {
     header.setFillColor(sf::Color(32, 74, 128));
     window.draw(header);
     drawText("Manager: Product Categories, Barcodes and Product Editor", 20, 12, 22, sf::Color::White);
+    drawButton(1020, 7, 240, 34, "Manage Seasons", sf::Color(39, 128, 82));
 
     drawText("Categories (PCategory.txt)", 20, 54, 16, sf::Color(32, 74, 128));
     drawField(20, 70, 70, 28, catIdInput, activeField == MF_CAT_ID);
