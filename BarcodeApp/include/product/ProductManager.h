@@ -3,8 +3,9 @@
 #include "ProductFileHandler.h"
 #include <string>
 
-// Forward declaration of Order class to maintain loose coupling
+// Forward declarations to maintain loose coupling
 class Order;
+class OrderManager;
 
 // Enumeration representing every stock validation outcome
 enum class StockValidationCode {
@@ -143,20 +144,25 @@ public:
     StockValidationResult validateStock(const std::string& identifier, int requestedQuantity) const;
 
     // ==========================================
-    // 7. Inventory & Quantity Updates
+    // 7. Inventory & Quantity Updates (Requirement 4)
     // ==========================================
     int getStockByBarcode(const std::string& barcode) const;
     int getStockById(const std::string& productId) const;
     int getStock(const std::string& identifier) const;
 
     bool updateStockQuantity(const std::string& identifier, int newQuantity);
+    bool updateStockQuantity(const std::string& identifier, int newQuantity, std::string& outMessage);
     bool addStock(const std::string& identifier, int quantityToAdd);
+    bool addStock(const std::string& identifier, int quantityToAdd, std::string& outMessage);
     bool deductStock(const std::string& identifier, int quantityToDeduct);
+    bool deductStock(const std::string& identifier, int quantityToDeduct, std::string& outMessage);
 
     // ==========================================
-    // 8. Order Management Workflow Coordination (for Iraj)
+    // 8. Order Management Workflow Coordination (Requirements 5 & 10)
     // ==========================================
     bool isOrderProcessed(const std::string& orderId) const;
+    bool markOrderProcessed(const std::string& orderId);
+    void syncProcessedOrdersFromOrderManager(const OrderManager& orderMgr);
     bool processOrderDeduction(const Order& order);
     bool restoreOrderStock(const Order& order);
     void resetProcessedOrders();

@@ -176,6 +176,8 @@ copy /Y "$(ProjectDir)vcpkg_installed\x64-windows\x64-windows\bin\*.dll" "$(Targ
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\billing\BillGenerator.cpp" />
+    <ClCompile Include="src\billing\PDFGenerator.cpp" />
+    <ClCompile Include="src\billing\SeasonManager.cpp" />
     <ClCompile Include="src\camera_scanner\CameraScanner.cpp" />
     <ClCompile Include="src\generation\BarcodeGenerator.cpp" />
     <ClCompile Include="src\gui\mainWindow.cpp" />

@@ -199,6 +199,8 @@ private:
     void removeSelectedProduct();
     void changeQuantity(int delta);
     void clearOrderForm();
+    void holdCurrentOrder();
+    void resumeHeldOrder();
     void goToPayment();
     void confirmPayment();
     void saveBillToFile();
