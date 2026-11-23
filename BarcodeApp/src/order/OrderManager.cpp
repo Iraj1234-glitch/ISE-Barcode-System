@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iomanip>
 #include <cctype>
+#include <ctime>
 
 // ==========================================
 // OrderDetail Implementation
@@ -70,13 +71,15 @@ Order::Order() {
     paymentAmount = 0.0;
     paymentMode = "cash";
     paymentMerchantName = "None";
+    paymentDate = "";
     detailCount = 0;
 }
 
 Order::Order(const std::string& id, const std::string& date, const std::string& time,
              const std::string& custName, const std::string& custContact,
              const std::string& status, double amount,
-             const std::string& payMode, const std::string& merchant) {
+             const std::string& payMode, const std::string& merchant,
+             const std::string& payDate) {
     orderId = id;
     orderDate = date;
     orderTime = time;
@@ -86,6 +89,7 @@ Order::Order(const std::string& id, const std::string& date, const std::string& 
     paymentAmount = amount;
     paymentMode = payMode;
     paymentMerchantName = merchant;
+    paymentDate = payDate;
     detailCount = 0;
 }
 
@@ -123,6 +127,10 @@ std::string Order::getPaymentMode() const {
 
 std::string Order::getPaymentMerchantName() const {
     return paymentMerchantName;
+}
+
+std::string Order::getPaymentDate() const {
+    return paymentDate;
 }
 
 int Order::getDetailCount() const {
@@ -173,13 +181,38 @@ void Order::setPaymentMerchantName(const std::string& merchant) {
     paymentMerchantName = merchant;
 }
 
+void Order::setPaymentDate(const std::string& payDate) {
+    paymentDate = payDate;
+}
+
 int Order::findDetailIndex(const std::string& productId) const {
     for (int i = 0; i < detailCount; i++) {
-        if (details[i].getProductId() == productId) {
+        if (details[i].getProductId() == productId || details[i].getProductBarcode() == productId) {
             return i;
         }
     }
     return -1;
+}
+
+int Order::findDetailIndexByBarcode(const std::string& barcode) const {
+    for (int i = 0; i < detailCount; i++) {
+        if (details[i].getProductBarcode() == barcode) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool Order::hasProduct(const std::string& productId) const {
+    return findDetailIndex(productId) != -1;
+}
+
+int Order::getProductQuantity(const std::string& productId) const {
+    int idx = findDetailIndex(productId);
+    if (idx != -1) {
+        return details[idx].getQuantity();
+    }
+    return 0;
 }
 
 bool Order::addProduct(const std::string& productId, const std::string& productBarcode, int quantity) {
@@ -187,8 +220,12 @@ bool Order::addProduct(const std::string& productId, const std::string& productB
         return false;
     }
 
-    // Check if the product already exists in this order
+    // Check if the product already exists in this order (by product ID or barcode)
     int existingIndex = findDetailIndex(productId);
+    if (existingIndex == -1 && !productBarcode.empty()) {
+        existingIndex = findDetailIndexByBarcode(productBarcode);
+    }
+
     if (existingIndex != -1) {
         // Increment the existing quantity consistently
         int newQuantity = details[existingIndex].getQuantity() + quantity;
@@ -221,6 +258,23 @@ bool Order::updateProductQuantity(const std::string& productId, int newQuantity)
     return false;
 }
 
+bool Order::removeProduct(const std::string& productId) {
+    int index = findDetailIndex(productId);
+    if (index == -1) {
+        index = findDetailIndexByBarcode(productId);
+    }
+    if (index == -1) {
+        return false;
+    }
+
+    // Shift subsequent details down
+    for (int i = index; i < detailCount - 1; i++) {
+        details[i] = details[i + 1];
+    }
+    detailCount--;
+    return true;
+}
+
 void Order::clearDetails() {
     detailCount = 0;
 }
@@ -250,7 +304,10 @@ static std::string cleanLine(const std::string& line) {
 
 // Quote strings that contain spaces or are empty so space-separated parsing is preserved
 static std::string formatField(const std::string& str) {
-    if (str.empty() || str.find(' ') != std::string::npos || str.find('\t') != std::string::npos) {
+    if (str.empty()) {
+        return "\"\"";
+    }
+    if (str.find(' ') != std::string::npos || str.find('\t') != std::string::npos) {
         return "\"" + str + "\"";
     }
     return str;
@@ -292,6 +349,92 @@ static int splitSpaceQuoted(const std::string& line, std::string tokens[], int m
 
 
 // ==========================================
+// Date & 7-Day Calculation Implementation
+// ==========================================
+
+static int toJulianDayNumber(int y, int m, int d) {
+    int a = (14 - m) / 12;
+    int y2 = y + 4800 - a;
+    int m2 = m + 12 * a - 3;
+    return d + (153 * m2 + 2) / 5 + 365 * y2 + y2 / 4 - y2 / 100 + y2 / 400 - 32045;
+}
+
+bool OrderManager::parseDate(const std::string& dateStr, int& year, int& month, int& day) {
+    std::string s = trimString(dateStr);
+    if (s.length() < 10) {
+        return false;
+    }
+
+    // Format: YYYY-MM-DD or YYYY/MM/DD
+    if ((s[4] == '-' || s[4] == '/') && (s[7] == '-' || s[7] == '/')) {
+        try {
+            year = std::stoi(s.substr(0, 4));
+            month = std::stoi(s.substr(5, 2));
+            day = std::stoi(s.substr(8, 2));
+            return (year >= 1900 && month >= 1 && month <= 12 && day >= 1 && day <= 31);
+        } catch (...) {
+            return false;
+        }
+    }
+
+    // Format: DD-MM-YYYY or DD/MM/YYYY
+    if ((s[2] == '-' || s[2] == '/') && (s[5] == '-' || s[5] == '/')) {
+        try {
+            day = std::stoi(s.substr(0, 2));
+            month = std::stoi(s.substr(3, 2));
+            year = std::stoi(s.substr(6, 4));
+            return (year >= 1900 && month >= 1 && month <= 12 && day >= 1 && day <= 31);
+        } catch (...) {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+int OrderManager::daysBetweenDates(const std::string& fromDate, const std::string& toDate) {
+    int fromY = 0, fromM = 0, fromD = 0;
+    int toY = 0, toM = 0, toD = 0;
+
+    if (!parseDate(fromDate, fromY, fromM, fromD)) {
+        return -99999;
+    }
+    if (!parseDate(toDate, toY, toM, toD)) {
+        return -99999;
+    }
+
+    int jdnFrom = toJulianDayNumber(fromY, fromM, fromD);
+    int jdnTo = toJulianDayNumber(toY, toM, toD);
+
+    return (jdnTo - jdnFrom);
+}
+
+std::string OrderManager::getCurrentSystemDate() {
+    std::time_t now = std::time(nullptr);
+    std::tm localTm = {};
+#if defined(_MSC_VER)
+    localtime_s(&localTm, &now);
+#else
+    localTm = *std::localtime(&now);
+#endif
+    std::ostringstream oss;
+    oss << (localTm.tm_year + 1900) << "-"
+        << std::setw(2) << std::setfill('0') << (localTm.tm_mon + 1) << "-"
+        << std::setw(2) << std::setfill('0') << localTm.tm_mday;
+    return oss.str();
+}
+
+bool OrderManager::isWithinSevenDays(const std::string& paymentDate, const std::string& currentDate) {
+    if (paymentDate.empty()) {
+        return false;
+    }
+    std::string refDate = currentDate.empty() ? getCurrentSystemDate() : currentDate;
+    int diff = daysBetweenDates(paymentDate, refDate);
+    return (diff >= 0 && diff <= 7);
+}
+
+
+// ==========================================
 // OrderManager Implementation
 // ==========================================
 
@@ -311,7 +454,8 @@ bool OrderManager::isValidStatus(const std::string& status) const {
     return (status == "in-progress" ||
             status == "on-hold" ||
             status == "paid" ||
-            status == "archived");
+            status == "archived" ||
+            status == "cancelled");
 }
 
 bool OrderManager::isValidPaymentMode(const std::string& mode) const {
@@ -399,7 +543,8 @@ bool OrderManager::createOrder(const std::string& orderId, const std::string& or
                                const std::string& orderTime, const std::string& customerName,
                                const std::string& customerContact, const std::string& orderStatus,
                                double paymentAmount, const std::string& paymentMode,
-                               const std::string& paymentMerchantName) {
+                               const std::string& paymentMerchantName,
+                               const std::string& paymentDate) {
     if (orderCount >= MAX_ORDERS) {
         return false;
     }
@@ -430,15 +575,99 @@ bool OrderManager::createOrder(const std::string& orderId, const std::string& or
     }
 
     orders[orderCount] = Order(orderId, orderDate, orderTime, customerName, customerContact,
-                               orderStatus, paymentAmount, paymentMode, paymentMerchantName);
+                               orderStatus, paymentAmount, paymentMode, paymentMerchantName, paymentDate);
     orderCount++;
 
     saveAllOrders();
     return true;
 }
 
+// Requirement 3: Order Editing & Policy Enforcement
+bool OrderManager::canEditOrder(const std::string& orderId, bool managerApproval,
+                                const std::string& currentDate, std::string* outReason) const {
+    const Order* order = findOrder(orderId);
+    if (order == nullptr) {
+        if (outReason) *outReason = "Order not found with ID: " + orderId;
+        return false;
+    }
+
+    std::string status = order->getOrderStatus();
+
+    if (status == "archived") {
+        if (outReason) *outReason = "Archived orders cannot be modified.";
+        return false;
+    }
+
+    if (status == "cancelled") {
+        if (outReason) *outReason = "Cancelled orders cannot be modified.";
+        return false;
+    }
+
+    if (status == "in-progress" || status == "on-hold") {
+        if (outReason) *outReason = "Order is active and available for modification.";
+        return true;
+    }
+
+    if (status == "paid") {
+        // Enforce Requirement 3: Paid orders can only be edited within 7 days AND with manager approval
+        std::string payDate = order->getPaymentDate();
+        if (payDate.empty()) {
+            if (outReason) *outReason = "Error: Paid order has no recorded payment date.";
+            return false;
+        }
+
+        std::string refDate = currentDate.empty() ? getCurrentSystemDate() : currentDate;
+        int diffDays = daysBetweenDates(payDate, refDate);
+
+        if (diffDays < 0) {
+            if (outReason) *outReason = "Error: Payment date is in the future relative to current date.";
+            return false;
+        }
+
+        if (diffDays > 7) {
+            if (outReason) *outReason = "Error: Paid orders cannot be edited after 7 days from payment (Elapsed: " +
+                                       std::to_string(diffDays) + " days).";
+            return false;
+        }
+
+        if (!managerApproval) {
+            if (outReason) *outReason = "Error: Manager approval is strictly required to edit a paid order.";
+            return false;
+        }
+
+        if (outReason) *outReason = "Success: Paid order approved for modification within 7 days.";
+        return true;
+    }
+
+    if (outReason) *outReason = "Error: Unrecognized order status '" + status + "'.";
+    return false;
+}
+
+bool OrderManager::openOrder(const std::string& orderId, Order& outOrder) const {
+    const Order* order = findOrder(orderId);
+    if (order != nullptr) {
+        outOrder = *order;
+        return true;
+    }
+    return false;
+}
+
+Order* OrderManager::openOrderForEditing(const std::string& orderId, bool managerApproval,
+                                        const std::string& currentDate, std::string* outReason) {
+    if (!canEditOrder(orderId, managerApproval, currentDate, outReason)) {
+        return nullptr;
+    }
+    return findOrder(orderId);
+}
+
 bool OrderManager::addProductToOrder(const std::string& orderId, const std::string& productId,
-                                     const std::string& productBarcode, int quantity) {
+                                     const std::string& productBarcode, int quantity,
+                                     bool managerApproval, const std::string& currentDate) {
+    std::string reason;
+    if (!canEditOrder(orderId, managerApproval, currentDate, &reason)) {
+        return false;
+    }
+
     Order* order = findOrder(orderId);
     if (order == nullptr) {
         return false;
@@ -449,6 +678,125 @@ bool OrderManager::addProductToOrder(const std::string& orderId, const std::stri
         saveAllOrderDetails();
     }
     return added;
+}
+
+bool OrderManager::updateProductQuantityInOrder(const std::string& orderId, const std::string& productId,
+                                                int newQuantity, bool managerApproval,
+                                                const std::string& currentDate) {
+    std::string reason;
+    if (!canEditOrder(orderId, managerApproval, currentDate, &reason)) {
+        return false;
+    }
+
+    Order* order = findOrder(orderId);
+    if (order == nullptr) {
+        return false;
+    }
+
+    bool updated = false;
+    if (newQuantity <= 0) {
+        updated = order->removeProduct(productId);
+    } else {
+        updated = order->updateProductQuantity(productId, newQuantity);
+    }
+
+    if (updated) {
+        saveAllOrderDetails();
+    }
+    return updated;
+}
+
+bool OrderManager::removeProductFromOrder(const std::string& orderId, const std::string& productId,
+                                          bool managerApproval, const std::string& currentDate) {
+    std::string reason;
+    if (!canEditOrder(orderId, managerApproval, currentDate, &reason)) {
+        return false;
+    }
+
+    Order* order = findOrder(orderId);
+    if (order == nullptr) {
+        return false;
+    }
+
+    bool removed = order->removeProduct(productId);
+    if (removed) {
+        saveAllOrderDetails();
+    }
+    return removed;
+}
+
+// Requirement 3 & 10: Holding and Resuming Orders
+bool OrderManager::holdOrder(const std::string& orderId) {
+    Order* order = findOrder(orderId);
+    if (order == nullptr) {
+        return false;
+    }
+    if (order->getOrderStatus() != "in-progress") {
+        return false;
+    }
+    order->setOrderStatus("on-hold");
+    return saveAllOrders();
+}
+
+bool OrderManager::resumeOrder(const std::string& orderId) {
+    Order* order = findOrder(orderId);
+    if (order == nullptr) {
+        return false;
+    }
+    if (order->getOrderStatus() != "on-hold") {
+        return false;
+    }
+    order->setOrderStatus("in-progress");
+    return saveAllOrders();
+}
+
+int OrderManager::getOnHoldOrders(Order outOrders[], int maxCapacity) const {
+    int count = 0;
+    for (int i = 0; i < orderCount && count < maxCapacity; i++) {
+        if (orders[i].getOrderStatus() == "on-hold") {
+            outOrders[count++] = orders[i];
+        }
+    }
+    return count;
+}
+
+int OrderManager::getOnHoldOrderCount() const {
+    int count = 0;
+    for (int i = 0; i < orderCount; i++) {
+        if (orders[i].getOrderStatus() == "on-hold") {
+            count++;
+        }
+    }
+    return count;
+}
+
+int OrderManager::getActiveOrderCount() const {
+    int count = 0;
+    for (int i = 0; i < orderCount; i++) {
+        if (orders[i].getOrderStatus() == "in-progress") {
+            count++;
+        }
+    }
+    return count;
+}
+
+int OrderManager::getPaidOrderCount() const {
+    int count = 0;
+    for (int i = 0; i < orderCount; i++) {
+        if (orders[i].getOrderStatus() == "paid") {
+            count++;
+        }
+    }
+    return count;
+}
+
+Order* OrderManager::getLatestOnHoldOrder() {
+    for (int i = orderCount - 1; i >= 0; i--) {
+        if (orders[i].getOrderStatus() == "on-hold") {
+            return &orders[i];
+        }
+    }
+    return nullptr;
 }
 
 Order* OrderManager::findOrder(const std::string& orderId) {
@@ -484,7 +832,8 @@ bool OrderManager::updateOrderStatus(const std::string& orderId, const std::stri
 }
 
 bool OrderManager::updatePaymentInformation(const std::string& orderId, double paymentAmount,
-                                            const std::string& paymentMode, const std::string& merchantName) {
+                                            const std::string& paymentMode, const std::string& merchantName,
+                                            const std::string& paymentDate) {
     if (!isValidPaymentMode(paymentMode)) {
         return false;
     }
@@ -501,6 +850,31 @@ bool OrderManager::updatePaymentInformation(const std::string& orderId, double p
     order->setPaymentAmount(paymentAmount);
     order->setPaymentMode(paymentMode);
     order->setPaymentMerchantName(merchantName);
+    if (!paymentDate.empty()) {
+        order->setPaymentDate(paymentDate);
+    }
+
+    return saveAllOrders();
+}
+
+bool OrderManager::markOrderAsPaid(const std::string& orderId, double paymentAmount,
+                                   const std::string& paymentMode, const std::string& merchantName,
+                                   const std::string& paymentDate) {
+    if (!isValidPaymentMode(paymentMode) || paymentAmount < 0.0) {
+        return false;
+    }
+
+    Order* order = findOrder(orderId);
+    if (order == nullptr) {
+        return false;
+    }
+
+    std::string pDate = paymentDate.empty() ? getCurrentSystemDate() : paymentDate;
+    order->setOrderStatus("paid");
+    order->setPaymentAmount(paymentAmount);
+    order->setPaymentMode(paymentMode);
+    order->setPaymentMerchantName(merchantName);
+    order->setPaymentDate(pDate);
 
     return saveAllOrders();
 }
@@ -521,7 +895,7 @@ bool OrderManager::loadOrders() {
             continue;
         }
 
-        std::string fields[10];
+        std::string fields[12];
         int fieldCount = 0;
 
         // Support both comma-separated and space-separated quoted formats
@@ -530,16 +904,16 @@ bool OrderManager::loadOrders() {
             std::string current = "";
             for (size_t i = 0; i < cleaned.length(); i++) {
                 if (cleaned[i] == ',') {
-                    if (count < 10) fields[count++] = trimString(current);
+                    if (count < 12) fields[count++] = trimString(current);
                     current = "";
                 } else {
                     current += cleaned[i];
                 }
             }
-            if (count < 10) fields[count++] = trimString(current);
+            if (count < 12) fields[count++] = trimString(current);
             fieldCount = count;
         } else {
-            fieldCount = splitSpaceQuoted(cleaned, fields, 10);
+            fieldCount = splitSpaceQuoted(cleaned, fields, 12);
         }
 
         if (fieldCount >= 9) {
@@ -557,10 +931,19 @@ bool OrderManager::loadOrders() {
             }
             std::string pMode = fields[7];
             std::string pMerchant = fields[8];
+            std::string pDate = "";
+
+            // Field 10 is the dedicated Payment Date (Requirement 3)
+            if (fieldCount >= 10) {
+                pDate = fields[9];
+                if (pDate == "\"\"" || pDate == "None" || pDate == "-") {
+                    pDate = "";
+                }
+            }
 
             if (orderCount < MAX_ORDERS) {
                 orders[orderCount] = Order(oId, oDate, oTime, cName, cContact,
-                                           oStatus, pAmount, pMode, pMerchant);
+                                           oStatus, pAmount, pMode, pMerchant, pDate);
                 orderCount++;
             }
         }
@@ -667,7 +1050,14 @@ bool OrderManager::saveAllOrders() {
              << orders[i].getOrderStatus() << " "
              << std::fixed << std::setprecision(2) << orders[i].getPaymentAmount() << " "
              << orders[i].getPaymentMode() << " "
-             << formatField(orders[i].getPaymentMerchantName()) << " #\n";
+             << formatField(orders[i].getPaymentMerchantName());
+
+        // Field 10: Payment date is persisted when available (Requirement 3)
+        if (!orders[i].getPaymentDate().empty()) {
+            file << " " << formatField(orders[i].getPaymentDate());
+        }
+
+        file << " #\n";
     }
 
     file.close();

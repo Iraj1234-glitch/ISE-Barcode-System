@@ -1,5 +1,6 @@
 #include "../../include/product/ProductManager.h"
 #include "../../include/order/Order.h"
+#include "../../include/order/OrderManager.h"
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -496,7 +497,7 @@ StockValidationResult ProductManager::validateStock(const std::string& identifie
 }
 
 // ==========================================
-// 7. Inventory & Quantity Updates
+// 7. Inventory & Quantity Updates (Requirement 4)
 // ==========================================
 int ProductManager::getStockByBarcode(const std::string& barcode) const {
     const Product* p = findProductByBarcode(barcode);
@@ -522,42 +523,94 @@ int ProductManager::getStock(const std::string& identifier) const {
     return -1;
 }
 
-bool ProductManager::updateStockQuantity(const std::string& identifier, int newQuantity) {
+bool ProductManager::updateStockQuantity(const std::string& identifier, int newQuantity, std::string& outMessage) {
+    if (identifier.empty()) {
+        outMessage = "Error: Product identifier cannot be empty.";
+        return false;
+    }
     if (newQuantity < 0) {
-        return false; // Prevent negative inventory
+        outMessage = "Error: Stock quantity cannot be negative (" + std::to_string(newQuantity) + ").";
+        return false;
     }
     Product* p = findProduct(identifier);
-    if (p != nullptr) {
-        p->setStockQuantity(newQuantity);
-        return true;
+    if (p == nullptr) {
+        outMessage = "Error: Product with identifier '" + identifier + "' not found.";
+        return false;
     }
-    return false;
+    p->setStockQuantity(newQuantity);
+    outMessage = "Success: Stock quantity updated to " + std::to_string(newQuantity) + " for " + p->getProductName() + ".";
+    return true;
+}
+
+bool ProductManager::updateStockQuantity(const std::string& identifier, int newQuantity) {
+    std::string msg;
+    return updateStockQuantity(identifier, newQuantity, msg);
+}
+
+bool ProductManager::addStock(const std::string& identifier, int quantityToAdd, std::string& outMessage) {
+    if (identifier.empty()) {
+        outMessage = "Error: Product identifier cannot be empty.";
+        return false;
+    }
+    if (quantityToAdd <= 0) {
+        outMessage = "Error: Quantity to add must be positive (" + std::to_string(quantityToAdd) + ").";
+        return false;
+    }
+    Product* p = findProduct(identifier);
+    if (p == nullptr) {
+        outMessage = "Error: Product with identifier '" + identifier + "' not found.";
+        return false;
+    }
+    bool ok = p->addStock(quantityToAdd);
+    if (ok) {
+        outMessage = "Success: Added " + std::to_string(quantityToAdd) + " units to " + p->getProductName() +
+                     ". New available stock: " + std::to_string(p->getStockQuantity()) + ".";
+    } else {
+        outMessage = "Error: Could not add stock to product.";
+    }
+    return ok;
 }
 
 bool ProductManager::addStock(const std::string& identifier, int quantityToAdd) {
-    if (quantityToAdd <= 0) {
+    std::string msg;
+    return addStock(identifier, quantityToAdd, msg);
+}
+
+bool ProductManager::deductStock(const std::string& identifier, int quantityToDeduct, std::string& outMessage) {
+    if (identifier.empty()) {
+        outMessage = "Error: Product identifier cannot be empty.";
+        return false;
+    }
+    if (quantityToDeduct <= 0) {
+        outMessage = "Error: Quantity to deduct must be positive (" + std::to_string(quantityToDeduct) + ").";
         return false;
     }
     Product* p = findProduct(identifier);
-    if (p != nullptr) {
-        return p->addStock(quantityToAdd);
+    if (p == nullptr) {
+        outMessage = "Error: Product with identifier '" + identifier + "' not found.";
+        return false;
     }
-    return false;
+    if (p->getStockQuantity() < quantityToDeduct) {
+        outMessage = "Error: Insufficient stock for " + p->getProductName() + ". Available: " +
+                     std::to_string(p->getStockQuantity()) + ", Requested deduction: " +
+                     std::to_string(quantityToDeduct) + ".";
+        return false;
+    }
+    bool ok = p->deductStock(quantityToDeduct);
+    if (ok) {
+        outMessage = "Success: Deducted " + std::to_string(quantityToDeduct) + " units from " + p->getProductName() +
+                     ". Remaining stock: " + std::to_string(p->getStockQuantity()) + ".";
+    }
+    return ok;
 }
 
 bool ProductManager::deductStock(const std::string& identifier, int quantityToDeduct) {
-    if (quantityToDeduct <= 0) {
-        return false;
-    }
-    Product* p = findProduct(identifier);
-    if (p != nullptr) {
-        return p->deductStock(quantityToDeduct);
-    }
-    return false;
+    std::string msg;
+    return deductStock(identifier, quantityToDeduct, msg);
 }
 
 // ==========================================
-// 8. Order Management Workflow Coordination (for Iraj)
+// 8. Order Management Workflow Coordination (Requirements 5 & 10)
 // ==========================================
 bool ProductManager::isOrderProcessed(const std::string& orderId) const {
     if (orderId.empty()) return false;
@@ -567,6 +620,24 @@ bool ProductManager::isOrderProcessed(const std::string& orderId) const {
         }
     }
     return false;
+}
+
+bool ProductManager::markOrderProcessed(const std::string& orderId) {
+    if (orderId.empty()) return false;
+    if (isOrderProcessed(orderId)) return true;
+    if (processedOrderCount >= MAX_PROCESSED_ORDERS) return false;
+    processedOrderIds[processedOrderCount++] = orderId;
+    return true;
+}
+
+void ProductManager::syncProcessedOrdersFromOrderManager(const OrderManager& orderMgr) {
+    int total = orderMgr.getOrderCount();
+    for (int i = 0; i < total; i++) {
+        const Order* o = orderMgr.getOrderAt(i);
+        if (o != nullptr && o->getOrderStatus() == "paid") {
+            markOrderProcessed(o->getOrderId());
+        }
+    }
 }
 
 bool ProductManager::processOrderDeduction(const Order& order) {
@@ -585,7 +656,7 @@ bool ProductManager::processOrderDeduction(const Order& order) {
         return false;
     }
 
-    // Step 1: Pre-validation of all order items (Atomic check)
+    // Step 1: Pre-validation of all order items (Atomic check: ensure complete order can be fulfilled)
     for (int i = 0; i < detailsCount; i++) {
         const OrderDetail& detail = order.getDetail(i);
         std::string pId = detail.getProductId();
@@ -607,7 +678,7 @@ bool ProductManager::processOrderDeduction(const Order& order) {
         }
     }
 
-    // Step 2: Deduct stock for each item
+    // Step 2: Deduct stock for each item in memory
     for (int i = 0; i < detailsCount; i++) {
         const OrderDetail& detail = order.getDetail(i);
         std::string pId = detail.getProductId();
@@ -624,15 +695,34 @@ bool ProductManager::processOrderDeduction(const Order& order) {
         }
     }
 
-    // Step 3: Record order as processed
-    if (processedOrderCount < MAX_PROCESSED_ORDERS) {
-        processedOrderIds[processedOrderCount++] = oId;
+    // Step 3: Persist updated stock to file. If saving fails, rollback changes immediately!
+    bool saved = saveProducts();
+    if (!saved) {
+        // Rollback all deducted quantities
+        for (int i = 0; i < detailsCount; i++) {
+            const OrderDetail& detail = order.getDetail(i);
+            std::string pId = detail.getProductId();
+            std::string pBarcode = detail.getProductBarcode();
+            int qty = detail.getQuantity();
+
+            Product* p = findProductById(pId);
+            if (p == nullptr) {
+                p = findProductByBarcode(pBarcode);
+            }
+            if (p != nullptr) {
+                p->addStock(qty);
+            }
+        }
+        return false;
     }
 
-    // Step 4: Persist updated stock
-    saveProducts();
     if (!inventoryFilePath.empty()) {
         saveInventory();
+    }
+
+    // Step 4: Record order as processed
+    if (processedOrderCount < MAX_PROCESSED_ORDERS) {
+        processedOrderIds[processedOrderCount++] = oId;
     }
 
     return true;
@@ -659,6 +749,8 @@ bool ProductManager::restoreOrderStock(const Order& order) {
     }
 
     int detailsCount = order.getDetailCount();
+
+    // Step 1: Add back stock in memory
     for (int i = 0; i < detailsCount; i++) {
         const OrderDetail& detail = order.getDetail(i);
         std::string pId = detail.getProductId();
@@ -675,17 +767,36 @@ bool ProductManager::restoreOrderStock(const Order& order) {
         }
     }
 
-    // Remove from processed orders list
+    // Step 2: Persist restored stock. If saving fails, rollback changes!
+    bool saved = saveProducts();
+    if (!saved) {
+        // Rollback all restored quantities
+        for (int i = 0; i < detailsCount; i++) {
+            const OrderDetail& detail = order.getDetail(i);
+            std::string pId = detail.getProductId();
+            std::string pBarcode = detail.getProductBarcode();
+            int qty = detail.getQuantity();
+
+            Product* p = findProductById(pId);
+            if (p == nullptr) {
+                p = findProductByBarcode(pBarcode);
+            }
+            if (p != nullptr && qty > 0) {
+                p->deductStock(qty);
+            }
+        }
+        return false;
+    }
+
+    if (!inventoryFilePath.empty()) {
+        saveInventory();
+    }
+
+    // Step 3: Remove from processed orders list
     for (int i = foundIdx; i < processedOrderCount - 1; i++) {
         processedOrderIds[i] = processedOrderIds[i + 1];
     }
     processedOrderCount--;
-
-    // Persist restored stock
-    saveProducts();
-    if (!inventoryFilePath.empty()) {
-        saveInventory();
-    }
 
     return true;
 }

@@ -45,6 +45,7 @@ private:
     double paymentAmount;
     std::string paymentMode;
     std::string paymentMerchantName;
+    std::string paymentDate; // Requirement 3: Dedicated payment date field
 
     // Array of details without using std::vector
     OrderDetail details[MAX_DETAILS_PER_ORDER];
@@ -54,11 +55,12 @@ public:
     // Default constructor
     Order();
 
-    // Parameterized constructor
+    // Parameterized constructor (supports optional payment date)
     Order(const std::string& id, const std::string& date, const std::string& time,
           const std::string& custName, const std::string& custContact,
           const std::string& status, double amount,
-          const std::string& payMode, const std::string& merchant);
+          const std::string& payMode, const std::string& merchant,
+          const std::string& payDate = "");
 
     // Getters
     std::string getOrderId() const;
@@ -70,6 +72,7 @@ public:
     double getPaymentAmount() const;
     std::string getPaymentMode() const;
     std::string getPaymentMerchantName() const;
+    std::string getPaymentDate() const;
     int getDetailCount() const;
     const OrderDetail& getDetail(int index) const;
 
@@ -83,10 +86,15 @@ public:
     void setPaymentAmount(double amount);
     void setPaymentMode(const std::string& mode);
     void setPaymentMerchantName(const std::string& merchant);
+    void setPaymentDate(const std::string& payDate);
 
     // Product item management
     bool addProduct(const std::string& productId, const std::string& productBarcode, int quantity);
     bool updateProductQuantity(const std::string& productId, int newQuantity);
+    bool removeProduct(const std::string& productId);
     int findDetailIndex(const std::string& productId) const;
+    int findDetailIndexByBarcode(const std::string& barcode) const;
+    bool hasProduct(const std::string& productId) const;
+    int getProductQuantity(const std::string& productId) const;
     void clearDetails();
 };

@@ -76,7 +76,9 @@ static const UiRect R_PRODUCT = { 250, 305, 630, 105 };
 static const UiRect R_REMOVE = { 250, 645, 180, 40 };
 static const UiRect R_SUMMARY = { 910, 85, 260, 300 };
 static const UiRect R_BILL = { 910, 420, 260, 55 };
-static const UiRect R_CLEAR = { 910, 490, 260, 45 };
+static const UiRect R_CLEAR = { 910, 485, 260, 40 };
+static const UiRect R_HOLD = { 910, 535, 260, 40 };
+static const UiRect R_RESUME = { 910, 585, 260, 40 };
 
 // Order table
 static const float TBL_X = 250;
@@ -369,6 +371,10 @@ MainWindow::MainWindow()
     // Stock is stored in Product.txt, so stock checks and deductions are
     // active whenever the product file loads successfully.
     inventoryEnabled = productManager.loadProducts();
+    if (inventoryEnabled)
+    {
+        productManager.syncProcessedOrdersFromOrderManager(*orderManager);
+    }
 
     currentPage = PAGE_DASHBOARD;
     activeField = FIELD_NONE;
@@ -959,6 +965,8 @@ void MainWindow::drawOrderPage()
     drawOrderSummary();
     drawButton(R_BILL, "Generate Bill");
     drawButton(R_CLEAR, "Clear Order", COL_DANGER);
+    drawButton(R_HOLD, "Hold Order", sf::Color(210, 140, 20));
+    drawButton(R_RESUME, "Resume Held Order", sf::Color(30, 110, 180));
 
     drawMessage(250, 705, 16);
     drawBackButton();
@@ -1391,6 +1399,12 @@ void MainWindow::clickOrder(float x, float y)
         clearOrderForm();
         setMessage("Order cleared.", true);
     }
+
+    else if (hit(R_HOLD, x, y))
+        holdCurrentOrder();
+
+    else if (hit(R_RESUME, x, y))
+        resumeHeldOrder();
 
     else if (hit(R_BILL, x, y))
         goToPayment();
@@ -1908,8 +1922,9 @@ void MainWindow::scanImageIntoOrder()
 
     if (productFound)
     {
-        activeField = FIELD_QTY;
-        setMessage("Scanned " + code + ". Check the quantity and press Add Product.", true);
+        if (orderQty.empty() || orderQty == "0")
+            orderQty = "1";
+        addProductToCart();
     }
     else
     {
@@ -2149,6 +2164,104 @@ void MainWindow::clearOrderForm()
     activeField = FIELD_NONE;
 }
 
+void MainWindow::holdCurrentOrder()
+{
+    if (cartCount == 0)
+    {
+        setMessage("The cart is empty. Nothing to put on hold.", false);
+        return;
+    }
+
+    string date;
+    string timeText;
+    currentDateTime(date, timeText);
+
+    string orderId = orderManager->generateOrderId(date);
+    string cName = trimText(customerName);
+    if (cName.empty())
+        cName = "Walk-in Customer";
+
+    bool created = orderManager->createOrder(
+        orderId, date, timeText,
+        cName, trimText(customerContact),
+        "on-hold", cartTotal(), "cash", "None"
+    );
+
+    if (!created)
+    {
+        setMessage("Failed to create on-hold order record.", false);
+        return;
+    }
+
+    bool detailsSaved = true;
+    for (int i = 0; i < cartCount; i++)
+    {
+        if (!orderManager->addProductToOrder(orderId, cart[i].productId, cart[i].barcode, cart[i].quantity))
+        {
+            detailsSaved = false;
+            break;
+        }
+    }
+
+    if (!detailsSaved)
+    {
+        orderManager->updateOrderStatus(orderId, "cancelled");
+        setMessage("Failed to save product details for on-hold order.", false);
+        return;
+    }
+
+    clearOrderForm();
+    setMessage("Order " + orderId + " placed on hold successfully.", true);
+}
+
+void MainWindow::resumeHeldOrder()
+{
+    Order* heldOrder = orderManager->getLatestOnHoldOrder();
+    if (heldOrder == nullptr)
+    {
+        setMessage("No orders are currently on hold.", false);
+        return;
+    }
+
+    if (cartCount > 0)
+    {
+        setMessage("Please clear or complete current active cart before resuming an on-hold order.", false);
+        return;
+    }
+
+    customerName = heldOrder->getCustomerName();
+    customerContact = heldOrder->getCustomerContact();
+
+    cartCount = 0;
+    int detailCount = heldOrder->getDetailCount();
+    for (int i = 0; i < detailCount && cartCount < MAX_DETAILS_PER_ORDER; i++)
+    {
+        const OrderDetail& detail = heldOrder->getDetail(i);
+        const Product* prod = productManager.findProductById(detail.getProductId());
+        if (prod == nullptr)
+            prod = productManager.findProductByBarcode(detail.getProductBarcode());
+
+        if (prod != nullptr)
+        {
+            cart[cartCount].productId = prod->getProductId();
+            cart[cartCount].barcode = prod->getBarcode();
+            cart[cartCount].name = prod->getProductName();
+            cart[cartCount].price = prod->getPrice();
+            cart[cartCount].quantity = detail.getQuantity();
+            cart[cartCount].tax = prod->getTax();
+            cart[cartCount].discount = prod->getDiscount();
+            cartCount++;
+        }
+    }
+
+    string resumedId = heldOrder->getOrderId();
+    orderManager->resumeOrder(resumedId);
+
+    selectedRow = -1;
+    cartScroll = 0;
+    setMessage("Resumed on-hold order " + resumedId + " with " + to_string(cartCount) + " item(s).", true);
+}
+
 void MainWindow::goToPayment()
 {
     if (trimText(customerName).empty())
@@ -2285,9 +2398,9 @@ void MainWindow::confirmPayment()
         stockDeducted = true;
     }
 
-    // An order is marked paid only after its complete product list is saved
-    // and (when inventory is enabled) its stock has been deducted.
-    if (!orderManager->updateOrderStatus(orderId, "paid"))
+    // An order is marked paid with its payment date recorded
+    // only after its complete product list is saved and stock has been deducted.
+    if (!orderManager->markOrderAsPaid(orderId, total, payMode, merchant, date))
     {
         if (stockDeducted)
         {
